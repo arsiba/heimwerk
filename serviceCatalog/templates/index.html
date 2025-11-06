@@ -1,0 +1,19 @@
+{% extends "base_generic.html" %}
+
+{% block title%}
+<title>Heimwerk - Self Service for Homelabs</title>
+{% endblock %}
+
+{% block content %}
+  <h1>Heimwerk - Self Service for Homelabs</h1>
+  <p>
+    Welcome to Heimwerker, a website developed by
+    <em>Arne Bauer</em>!
+  </p>
+
+    <p>
+      You have visited this page {{ num_visits }} time{{ num_visits|pluralize }}.
+    </p>
+
+{% endblock %}
+
