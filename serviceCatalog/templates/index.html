@@ -1,19 +1,32 @@
 {% extends "base_generic.html" %}
 
-{% block title%}
-<title>Heimwerk - Self Service for Homelabs</title>
+{% block title %}
+<title>Heimwerk – Self Service for Homelabs</title>
 {% endblock %}
 
 {% block content %}
-  <h1>Heimwerk - Self Service for Homelabs</h1>
-  <p>
-    Welcome to Heimwerker, a website developed by
-    <em>Arne Bauer</em>!
-  </p>
+<h1>Heimwerk – Self Service for Homelabs</h1>
+<p>
+    Welcome to Heimwerk, the Self-Service-Platform for homelabs.
+</p>
 
-    <p>
-      You have visited this page {{ num_visits }} time{{ num_visits|pluralize }}.
-    </p>
+<h2>Verfügbare Module</h2>
+
+{% if modules %}
+    <ul>
+    {% for module in modules %}
+        <li>
+            <strong>{{ module.name }}</strong><br>
+            <small>{{ module.description }}</small>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>Derzeit sind keine Module verfügbar.</p>
+{% endif %}
+
+<p>
+    Du hast diese Seite {{ num_visits }}-mal besucht.
+</p>
 
 {% endblock %}
-

@@ -77,6 +77,7 @@ class Instance(models.Model):
     def __str__(self):
         return f"{self.name} ({self.module.name})"
 
+
 class UserProfile(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(
