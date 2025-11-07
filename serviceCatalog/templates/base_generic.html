@@ -12,7 +12,7 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
     {% block title %}
-        <title>Heimwerk – Self Service for Homelabs</title>
+      <title>Heimwerk – Self Service for Homelabs</title>
     {% endblock %}
   </head>
 
@@ -38,23 +38,28 @@
                 Services
               </a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link text-white px-4 py-2" href="#">
-                Deployments
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link text-white px-4 py-2" href="#">
-                Settings
-              </a>
-            </li>
-              {% if user.is_superuser %}
+            {% if is_admin or is_authenticated and user_instances_count > 0 %}
               <li class="nav-item">
-                  <a class="nav-link text-warning px-4 py-2" href="{% url 'admin:index' %}">
-                      Administration
-                  </a>
+                <a class="nav-link text-white px-4 py-2" href="{% url 'instance-list' %}">
+                  Deployments
+                </a>
               </li>
-              {% endif %}
+            {% endif %}
+
+            {% if is_admin or is_editor %}
+              <li class="nav-item">
+                <a class="nav-link text-white px-4 py-2" href="#">
+                  Settings
+                </a>
+              </li>
+            {% endif %}
+            {% if user.is_superuser %}
+              <li class="nav-item">
+                <a class="nav-link text-warning px-4 py-2" href="{% url 'admin:index' %}">
+                  Administration
+                </a>
+              </li>
+            {% endif %}
           </ul>
         </div>
 
@@ -80,27 +85,27 @@
         {% block content %}{% endblock %}
 
         {% block pagination %}
-        {% if is_paginated %}
-          <div class="container py-3">
-            <nav aria-label="Page navigation">
-              <ul class="pagination justify-content-center mb-0">
-                {% if page_obj.has_previous %}
-                  <li class="page-item">
-                    <a class="page-link" href="{{ request.path }}?page={{ page_obj.previous_page_number }}">Previous</a>
+          {% if is_paginated %}
+            <div class="container py-3">
+              <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mb-0">
+                  {% if page_obj.has_previous %}
+                    <li class="page-item">
+                      <a class="page-link" href="{{ request.path }}?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                  {% endif %}
+                  <li class="page-item disabled">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
                   </li>
-                {% endif %}
-                <li class="page-item disabled">
-                  <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-                </li>
-                {% if page_obj.has_next %}
-                  <li class="page-item">
-                    <a class="page-link" href="{{ request.path }}?page={{ page_obj.next_page_number }}">Next</a>
-                  </li>
-                {% endif %}
-              </ul>
-            </nav>
-          </div>
-        {% endif %}
+                  {% if page_obj.has_next %}
+                    <li class="page-item">
+                      <a class="page-link" href="{{ request.path }}?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+          {% endif %}
         {% endblock %}
       </main>
     </div>

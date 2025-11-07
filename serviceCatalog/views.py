@@ -1,3 +1,6 @@
+from importlib.metadata import requires
+
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from .models import TF_Module, Instance
 from django.views import generic
@@ -13,8 +16,7 @@ def index(request):
     num_visits += 1
     request.session['num_visits'] = num_visits
     user = request.user
-    print(user.groups.all())
-    is_admin = user.groups.filter(name="admin").exists()
+    is_admin = user.is_superuser
     is_editor = user.groups.filter(name="editor").exists()
     is_user = user.groups.filter(name="user").exists()
     user_instances_count = Instance.objects.filter(owner=user).count()
@@ -53,3 +55,19 @@ class ModuleDetailView(generic.DetailView):
             context['user_instances'] = []
         context['can_deploy'] = self.request.user.groups.filter(name="user").exists() or self.request.user.groups.filter(name="editor").exists()
         return context
+
+class InstanceListView(generic.ListView):
+    """Generic class-based view for a list of instances."""
+    model = Instance
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+            user = self.request.user
+            owned_instances = Instance.objects.filter(owner=user)
+
+            if user.is_superuser or user.groups.filter(name="editor").exists():
+                owned_instances = Instance.objects.all()
+            new_context =  {
+                'owned_Instances': owned_instances,
+            }
+            return new_context

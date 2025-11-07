@@ -1,70 +1,70 @@
 {% extends "base_generic.html" %}
 
 {% block title %}
-<title>Heimwerk – Self Service for Homelabs</title>
+  <title>Heimwerk – Self Service for Homelabs</title>
 {% endblock %}
 
 {% block content %}
 <!-- Stats Bar -->
-<div class="bg-white border-bottom">
-  <div class="container">
-    <div class="row py-3 text-center">
-      <div class="col-md-3">
-        <div class="fw-bold fs-4">{{ modules|length }}</div>
-        <small class="text-muted">Available Modules</small>
-      </div>
-      <div class="col-md-3">
-        <div class="fw-bold fs-4">{{ user_instances_count }}</div>
-        <small class="text-muted">Your Deployments</small>
-      </div>
-      <div class="col-md-3">
-        <div class="fw-bold fs-4">{{ all_instances_count }}</div>
-        <small class="text-muted">All Deployments</small>
-      </div>
-      <div class="col-md-3">
-        <div class="fw-bold fs-4">{{ num_visits }}</div>
-        <small class="text-muted">Page Visits</small>
+  <div class="bg-white border-bottom">
+    <div class="container">
+      <div class="row py-3 text-center">
+        <div class="col-md-3">
+          <div class="fw-bold fs-4">{{ modules|length }}</div>
+          <small class="text-muted">Available Modules</small>
+        </div>
+        <div class="col-md-3">
+          <div class="fw-bold fs-4">{{ user_instances_count }}</div>
+          <small class="text-muted">Your Deployments</small>
+        </div>
+        <div class="col-md-3">
+          <div class="fw-bold fs-4">{{ all_instances_count }}</div>
+          <small class="text-muted">All Deployments</small>
+        </div>
+        <div class="col-md-3">
+          <div class="fw-bold fs-4">{{ num_visits }}</div>
+          <small class="text-muted">Page Visits</small>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
 <!-- Modules Section -->
-<div class="container py-5" id="modules">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="h3 mb-0">Available Modules</h2>
-  </div>
+  <div class="container py-5" id="modules">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="h3 mb-0">Available Modules</h2>
+    </div>
 
-  {% if modules %}
-    <div class="row g-4">
-      {% for module in modules %}
-      <div class="col-md-6 col-xl-4">
-        <div class="card h-100 border">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-              <h5 class="card-title mb-0 fw-bold">{{ module.name|default:"Unnamed Module" }}</h5>
-            </div>
-            <p class="card-text text-secondary mb-3">
-              {{ module.description|default:"No description available." }}
-            </p>
-            <div class="border-top pt-3 mt-auto">
-              <div class="d-flex gap-2">
-                {% if user.is_authenticated and can_deploy %}
-                    <a href="#" class="btn btn-primary btn-sm flex-fill">Deploy</a>
-                {% endif %}
-                <a href="{{ module.get_absolute_url }}" class="btn btn-outline-secondary btn-sm">Details</a>
+    {% if modules %}
+      <div class="row g-4">
+        {% for module in modules %}
+          <div class="col-md-6 col-xl-4">
+            <div class="card h-100 border">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <h5 class="card-title mb-0 fw-bold">{{ module.name|default:"Unnamed Module" }}</h5>
+                </div>
+                <p class="card-text text-secondary mb-3">
+                  {{ module.description|default:"No description available." }}
+                </p>
+                <div class="border-top pt-3 mt-auto">
+                  <div class="d-flex gap-2">
+                    {% if user.is_authenticated and can_deploy %}
+                      <a href="#" class="btn btn-primary btn-sm flex-fill">Deploy</a>
+                    {% endif %}
+                    <a href="{{ module.get_absolute_url }}" class="btn btn-outline-secondary btn-sm">Details</a>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        {% endfor %}
       </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <div class="alert alert-warning border-warning" role="alert">
-      <h5 class="alert-heading">No modules available</h5>
-      <p class="mb-0">Check back later or contact your administrator to add modules to the catalog.</p>
-    </div>
-  {% endif %}
-</div>
+    {% else %}
+      <div class="alert alert-warning border-warning" role="alert">
+        <h5 class="alert-heading">No modules available</h5>
+        <p class="mb-0">Check back later or contact your administrator to add modules to the catalog.</p>
+      </div>
+    {% endif %}
+  </div>
 {% endblock %}
