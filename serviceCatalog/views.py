@@ -17,19 +17,10 @@ def index(request):
     num_visits += 1
     request.session["num_visits"] = num_visits
     user = request.user
-    is_admin = user.is_superuser
-    is_editor = user.groups.filter(name="editor").exists()
-    is_user = user.groups.filter(name="user").exists()
-    user_instances_count = Instance.objects.filter(owner=user).count()
-    all_instances_count = Instance.objects.count()
-    can_deploy = is_admin or is_editor or is_user
+
     context = {
         "num_visits": num_visits,
         "modules": modules,
-        "can_deploy": can_deploy,
-        "is_admin": is_admin,
-        "user_instances_count": user_instances_count,
-        "all_instances_count": all_instances_count,
     }
 
     # Render the HTML template index.html with the data in the context variable.
