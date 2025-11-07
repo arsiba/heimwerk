@@ -39,3 +39,10 @@ Excerpt:
 * **Tests** – Unit and integration tests for views, forms, backend, and settings.
 
 [See full TODO list](docs/TODO.md) for details.
+
+## Indent and Beatuify
+To indent html templates use the command:
+`djhtml template.html`
+
+To indent and beautify the python code use the command:
+`black .`

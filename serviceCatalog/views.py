@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from .models import TF_Module, Instance
 from django.views import generic
+
 # Create your views here.
 
 
@@ -12,9 +13,9 @@ def index(request):
 
     modules = TF_Module.objects.all()[:5]
 
-    num_visits = request.session.get('num_visits', 0)
+    num_visits = request.session.get("num_visits", 0)
     num_visits += 1
-    request.session['num_visits'] = num_visits
+    request.session["num_visits"] = num_visits
     user = request.user
     is_admin = user.is_superuser
     is_editor = user.groups.filter(name="editor").exists()
@@ -23,51 +24,62 @@ def index(request):
     all_instances_count = Instance.objects.count()
     can_deploy = is_admin or is_editor or is_user
     context = {
-        'num_visits': num_visits,
-        'modules': modules,
-        'can_deploy': can_deploy,
-        'is_admin': is_admin,
-        'user_instances_count': user_instances_count,
-        'all_instances_count': all_instances_count,
+        "num_visits": num_visits,
+        "modules": modules,
+        "can_deploy": can_deploy,
+        "is_admin": is_admin,
+        "user_instances_count": user_instances_count,
+        "all_instances_count": all_instances_count,
     }
 
     # Render the HTML template index.html with the data in the context variable.
-    return render(request, 'index.html', context=context)
+    return render(request, "index.html", context=context)
+
 
 class ModuleListView(generic.ListView):
     """Generic class-based view for a list of modules."""
+
     model = TF_Module
     paginate_by = 10
 
+
 class ModuleDetailView(generic.DetailView):
     """Generic class-based detail view for a module."""
+
     model = TF_Module
-    slug_field = 'slug'
-    slug_url_kwarg = 'slug'
+    slug_field = "slug"
+    slug_url_kwarg = "slug"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.user.is_authenticated:
-            context['user_instances'] = self.object.instances.filter(owner=self.request.user)
+            context["user_instances"] = self.object.instances.filter(
+                owner=self.request.user
+            )
         if self.request.user.is_superuser:
-            context['user_instances'] = self.object.instances.all()
+            context["user_instances"] = self.object.instances.all()
         else:
-            context['user_instances'] = []
-        context['can_deploy'] = self.request.user.groups.filter(name="user").exists() or self.request.user.groups.filter(name="editor").exists()
+            context["user_instances"] = []
+        context["can_deploy"] = (
+            self.request.user.groups.filter(name="user").exists()
+            or self.request.user.groups.filter(name="editor").exists()
+        )
         return context
+
 
 class InstanceListView(generic.ListView):
     """Generic class-based view for a list of instances."""
+
     model = Instance
     paginate_by = 10
 
     def get_context_data(self, **kwargs):
-            user = self.request.user
-            owned_instances = Instance.objects.filter(owner=user)
+        user = self.request.user
+        owned_instances = Instance.objects.filter(owner=user)
 
-            if user.is_superuser or user.groups.filter(name="editor").exists():
-                owned_instances = Instance.objects.all()
-            new_context =  {
-                'owned_Instances': owned_instances,
-            }
-            return new_context
+        if user.is_superuser or user.groups.filter(name="editor").exists():
+            owned_instances = Instance.objects.all()
+        new_context = {
+            "owned_Instances": owned_instances,
+        }
+        return new_context

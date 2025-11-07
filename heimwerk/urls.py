@@ -15,16 +15,13 @@ from django.views.generic import RedirectView
 
 urlpatterns = [
     # Admin site
-    path('admin/', admin.site.urls),
-
+    path("admin/", admin.site.urls),
     # Application routes
-    path('catalog/', include('serviceCatalog.urls')),
-
+    path("catalog/", include("serviceCatalog.urls")),
     # Redirect base URL to catalog
-    path('', RedirectView.as_view(url='catalog/', permanent=True)),
-
+    path("", RedirectView.as_view(url="catalog/", permanent=True)),
     # Authentication routes (login, logout, password management)
-    path('accounts/', include('django.contrib.auth.urls')),
+    path("accounts/", include("django.contrib.auth.urls")),
 ]
 
 # Serve static files during development

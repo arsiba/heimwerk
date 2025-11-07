@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('serviceCatalog', '0001_initial'),
+        ("serviceCatalog", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='tf_module',
-            name='slug',
+            model_name="tf_module",
+            name="slug",
             field=models.SlugField(blank=True, max_length=120, unique=True),
         ),
     ]

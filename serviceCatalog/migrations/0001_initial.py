@@ -17,41 +17,126 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='TF_Module',
+            name="TF_Module",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('name', models.CharField(help_text='Name des Terraform-Moduls', max_length=100, unique=True)),
-                ('description', models.TextField(blank=True, help_text='Kurzbeschreibung des Moduls')),
-                ('module_code', models.TextField(help_text='Terraform-Code oder Pfad zum Modul')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Name des Terraform-Moduls",
+                        max_length=100,
+                        unique=True,
+                    ),
+                ),
+                (
+                    "description",
+                    models.TextField(
+                        blank=True, help_text="Kurzbeschreibung des Moduls"
+                    ),
+                ),
+                (
+                    "module_code",
+                    models.TextField(help_text="Terraform-Code oder Pfad zum Modul"),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
         ),
         migrations.CreateModel(
-            name='UserProfile',
+            name="UserProfile",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('quota', models.PositiveIntegerField(default=3)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='profile', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("quota", models.PositiveIntegerField(default=3)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="profile",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Instance',
+            name="Instance",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('name', models.CharField(help_text='Eindeutiger Name der Instanz', max_length=50, unique=True)),
-                ('status', models.CharField(default='pending', help_text='Status der Instanz (pending, running, failed, destroyed, etc.)', max_length=20)),
-                ('terraform_output', models.JSONField(blank=True, help_text='Terraform-Ausgabe oder Metadaten zur Instanz', null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('module', models.ForeignKey(help_text='Das Terraform-Modul, das instanziiert wurde', on_delete=django.db.models.deletion.CASCADE, related_name='instances', to='serviceCatalog.tf_module')),
-                ('owner', models.ForeignKey(on_delete=django.db.models.deletion.RESTRICT, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Eindeutiger Name der Instanz",
+                        max_length=50,
+                        unique=True,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        default="pending",
+                        help_text="Status der Instanz (pending, running, failed, destroyed, etc.)",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "terraform_output",
+                    models.JSONField(
+                        blank=True,
+                        help_text="Terraform-Ausgabe oder Metadaten zur Instanz",
+                        null=True,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "module",
+                    models.ForeignKey(
+                        help_text="Das Terraform-Modul, das instanziiert wurde",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="instances",
+                        to="serviceCatalog.tf_module",
+                    ),
+                ),
+                (
+                    "owner",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.RESTRICT,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.AddConstraint(
-            model_name='instance',
-            constraint=models.UniqueConstraint(django.db.models.functions.text.Lower('name'), name='unique_instance_name', violation_error_message='Dieser Instanzname wird bereits verwendet.'),
+            model_name="instance",
+            constraint=models.UniqueConstraint(
+                django.db.models.functions.text.Lower("name"),
+                name="unique_instance_name",
+                violation_error_message="Dieser Instanzname wird bereits verwendet.",
+            ),
         ),
     ]
