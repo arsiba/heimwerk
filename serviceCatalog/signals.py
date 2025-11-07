@@ -16,11 +16,20 @@ def create_default_groups(sender, **kwargs):
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
-    """Erstellt ein Profil und ordnet neue User automatisch einer Gruppe zu."""
+    """Erstellt ein Profil und ordnet neue User automatisch Gruppen zu."""
     if created:
-        # Standardgruppe bestimmen – z. B. immer "user"
-        default_group = Group.objects.get(name="guest")
-        instance.groups.add(default_group)
+        # Stelle sicher, dass alle Default-Gruppen existieren
+        create_default_groups(sender)
 
-        # Profil anlegen
+        if instance.is_superuser:
+            # Superuser -> bekommt 'editor' + 'user'
+            editor_group = Group.objects.get(name="editor")
+            user_group = Group.objects.get(name="user")
+            instance.groups.add(editor_group, user_group)
+        else:
+            # Normale User -> bekommen z. B. 'guest'
+            guest_group = Group.objects.get(name="guest")
+            instance.groups.add(guest_group)
+
+        # UserProfile anlegen
         UserProfile.objects.create(user=instance)
