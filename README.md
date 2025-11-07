@@ -25,7 +25,6 @@ The recommended use case is in combination with **Pangolin**, to automatically m
 * Homelab users who want to deploy services quickly and easily
 * Users who want to test self-service deployments with standardized Terraform modules
 
----
 
 ## Development TODOs
 
