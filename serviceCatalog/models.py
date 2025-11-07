@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import UniqueConstraint
 from django.db.models.functions import Lower
+from django.utils.text import slugify
 
 
 class TF_Module(models.Model):
@@ -16,6 +17,9 @@ class TF_Module(models.Model):
         unique=True,
         help_text="Name des Terraform-Moduls"
     )
+
+    slug = models.SlugField(max_length=120, unique=True, blank=True)
+
     description = models.TextField(
         blank=True,
         help_text="Kurzbeschreibung des Moduls"
@@ -25,6 +29,15 @@ class TF_Module(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('module-detail', args=[self.slug])
 
     def __str__(self):
         return self.name
