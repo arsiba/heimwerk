@@ -1,6 +1,8 @@
 import docker
 from docker import DockerClient
 
+_client = None
+
 
 def init_docker(docker_ip: str = "127.0.0.1", docker_port: int = 2375):
     """
@@ -21,9 +23,18 @@ def init_docker(docker_ip: str = "127.0.0.1", docker_port: int = 2375):
     docker.DockerClient
         An instance of DockerClient connected to the specified Docker host.
     """
-    base_url = f"tcp://{docker_ip}:{docker_port}"
-    client = docker.DockerClient(base_url=base_url)
-    return client
+    global _client
+    if _client is None:
+        base_url = f"tcp://{docker_ip}:{docker_port}"
+        _client = docker.DockerClient(base_url=base_url)
+    return _client
+
+
+def get_docker_client():
+    global _client
+    if _client is None:
+        _client = docker.from_env()
+    return _client
 
 
 def pull_image(client: DockerClient, image_name: str):

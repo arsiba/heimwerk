@@ -67,6 +67,7 @@ class Instance(models.Model):
     STATUS_CHOICES = [
         ("pending", "Pending"),
         ("running", "Running"),
+        ("paused", "Paused"),
         ("failed", "Failed"),
         ("stopped", "Stopped"),
         ("destroyed", "Destroyed"),

@@ -1,14 +1,10 @@
-import json
-from importlib.metadata import requires
+import threading
 
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View, generic
 
-from .models import Instance, Module
+from deployDocker.deploy_logic import deploy_instance
 
-# Create your views here.
+from .models import Instance, Module
 
 
 def index(request):
@@ -164,7 +160,7 @@ class DeployView(LoginRequiredMixin, UserPassesTestMixin, View):
                 },
             )
 
-        Instance.objects.create(
+        instance = Instance.objects.create(
             name=name,
             owner=request.user,
             module=module,
@@ -174,5 +170,9 @@ class DeployView(LoginRequiredMixin, UserPassesTestMixin, View):
             environment=environment,
             restart_policy=restart_policy,
         )
+
+        threading.Thread(
+            target=deploy_instance, args=(instance.id,), daemon=True
+        ).start()
 
         return redirect("instance-list")

@@ -10,4 +10,4 @@ class ServicecatalogConfig(AppConfig):
     def ready(self):
         import serviceCatalog.signals
 
-        init_docker()
+        client = init_docker()
