@@ -45,3 +45,59 @@ Excerpt:
 * To indent and beautify HTML templates:
 ```bash
 djhtml template.html
+```
+
+## Development
+
+To run **Heimwerk** locally, you need a development Docker server with its API exposed over TCP. Follow these steps:
+
+### 1. Stop the running Docker service
+Before exposing the Docker API, stop the default Docker daemon:
+```bash
+sudo systemctl stop docker
+````
+
+### 2. Start Docker with TCP API enabled
+
+Start the Docker daemon manually, exposing both the TCP port (for Heimwerk) and the default Unix socket:
+
+```bash
+sudo dockerd -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock
+```
+
+* `tcp://0.0.0.0:2375` — allows connections over TCP on all interfaces.
+* `unix:///var/run/docker.sock` — keeps local Docker CLI commands functional.
+
+### 3. Verify Docker TCP access
+
+You can test the TCP API with:
+
+```bash
+curl http://localhost:2375/version
+```
+
+You should see JSON output containing Docker version information.
+
+### ⚠️ Security Notice
+
+Exposing Docker over TCP **without TLS** is insecure and allows full control of your system. For local development, it's recommended to either:
+
+* Restrict the TCP endpoint to `127.0.0.1`:
+
+```bash
+sudo dockerd -H tcp://127.0.0.1:2375 -H unix:///var/run/docker.sock
+```
+
+* Or configure TLS for remote access in production environments.
+
+### 4. Restart Docker after development
+
+When finished, restart the standard Docker service:
+
+```bash
+sudo systemctl start docker
+```
+
+This setup allows Heimwerk to communicate with Docker for deploying and managing containers in your local dev environment.
+
+
