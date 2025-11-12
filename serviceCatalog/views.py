@@ -1,9 +1,12 @@
+import json
 from importlib.metadata import requires
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from .models import TF_Module, Instance
-from django.views import generic
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views import View, generic
+
+from .models import Instance, Module
 
 # Create your views here.
 
@@ -11,15 +14,13 @@ from django.views import generic
 def index(request):
     """View function for home page of site."""
 
-    modules = TF_Module.objects.all()[:5]
+    modules = Module.objects.all()[:5]
 
     num_visits = request.session.get("num_visits", 0)
     num_visits += 1
-    request.session["num_visits"] = num_visits
     user = request.user
 
     context = {
-        "num_visits": num_visits,
         "modules": modules,
     }
 
@@ -30,14 +31,14 @@ def index(request):
 class ModuleListView(generic.ListView):
     """Generic class-based view for a list of modules."""
 
-    model = TF_Module
+    model = Module
     paginate_by = 10
 
 
 class ModuleDetailView(generic.DetailView):
     """Generic class-based detail view for a module."""
 
-    model = TF_Module
+    model = Module
     slug_field = "slug"
     slug_url_kwarg = "slug"
 
@@ -74,3 +75,104 @@ class InstanceListView(generic.ListView):
             "owned_Instances": owned_instances,
         }
         return new_context
+
+
+import json
+
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views import View
+
+from .models import Instance, Module
+
+
+def user_can_deploy(user):
+    return user.is_superuser or user.groups.filter(name__in=["user", "editor"]).exists()
+
+
+class DeployView(LoginRequiredMixin, UserPassesTestMixin, View):
+    template_name = "deploy_form.html"
+
+    def test_func(self):
+        return user_can_deploy(self.request.user)
+
+    def get(self, request, slug):
+        module = get_object_or_404(Module, slug=slug)
+
+        # Konvertiere alle Default-Felder in gültige JSON-Strings
+        default_ports_json = json.dumps(
+            module.default_ports or {}, separators=(",", ":")
+        )
+        default_env_json = json.dumps(module.default_env or {}, separators=(",", ":"))
+        default_restart_policy_json = json.dumps(
+            module.default_restart_policy or {}, separators=(",", ":")
+        )
+
+        context = {
+            "module": module,
+            "default_ports_json": default_ports_json,
+            "default_env_json": default_env_json,
+            "default_restart_policy_json": default_restart_policy_json,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, slug):
+        module = get_object_or_404(Module, slug=slug)
+
+        name = f"{request.POST.get('name')}_{request.user.username}"
+        image_name = request.POST.get("image_name")
+        ports_raw = request.POST.get("ports", "{}").strip()
+        env_raw = request.POST.get("environment", "{}").strip()
+        restart_policy_raw = request.POST.get("restart_policy", "{}").strip()
+
+        # Optional: Ersetze einfache Quotes durch doppelte, falls User falsch eingibt
+        ports_raw = ports_raw.replace("'", '"')
+        env_raw = env_raw.replace("'", '"')
+        restart_policy_raw = restart_policy_raw.replace("'", '"')
+
+        try:
+            ports = json.loads(ports_raw) if ports_raw else {}
+            environment = json.loads(env_raw) if env_raw else {}
+            restart_policy = (
+                json.loads(restart_policy_raw) if restart_policy_raw else {}
+            )
+        except json.JSONDecodeError as e:
+            return render(
+                request,
+                self.template_name,
+                {
+                    "module": module,
+                    "error": f"JSON parse error: {e}",
+                    "old_data": request.POST,
+                    "default_ports_json": ports_raw,
+                    "default_env_json": env_raw,
+                    "default_restart_policy_json": restart_policy_raw,
+                },
+            )
+
+        if Instance.objects.filter(name__iexact=name).exists():
+            return render(
+                request,
+                self.template_name,
+                {
+                    "module": module,
+                    "error": f"Name '{name}' is already taken",
+                    "old_data": request.POST,
+                    "default_ports_json": ports_raw,
+                    "default_env_json": env_raw,
+                    "default_restart_policy_json": restart_policy_raw,
+                },
+            )
+
+        Instance.objects.create(
+            name=name,
+            owner=request.user,
+            module=module,
+            status="pending",
+            image_name=image_name,
+            ports=ports,
+            environment=environment,
+            restart_policy=restart_policy,
+        )
+
+        return redirect("instance-list")

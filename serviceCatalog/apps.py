@@ -1,5 +1,7 @@
 from django.apps import AppConfig
 
+from deployDocker.docker_tools import init_docker
+
 
 class ServicecatalogConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
@@ -7,3 +9,5 @@ class ServicecatalogConfig(AppConfig):
 
     def ready(self):
         import serviceCatalog.signals
+
+        init_docker()
