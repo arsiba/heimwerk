@@ -77,9 +77,23 @@
 
             {% if user.is_authenticated and user == instance.owner %}
               <div class="mt-3 d-flex gap-2">
-                <a href="#" class="btn btn-danger btn-sm flex-fill">Delete</a>
                 <a href="{% url 'index' %}" class="btn btn-outline-secondary btn-sm flex-fill">Back</a>
+
+                <!-- Pause button -->
+                <form action="{% url 'instance-action' instance.id %}" method="post" class="flex-fill">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="pause">
+                  <button type="submit" class="btn btn-outline-secondary btn-sm w-100">Pause</button>
+                </form>
+
+                <!-- Delete button -->
+                <form action="{% url 'instance-action' instance.id %}" method="post" class="flex-fill">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="destroy">
+                  <button type="submit" class="btn btn-danger btn-sm w-100">Delete</button>
+                </form>
               </div>
+
             {% else %}
               <div class="mt-3">
                 <a href="{% url 'index' %}" class="btn btn-outline-secondary btn-sm">Back to list</a>

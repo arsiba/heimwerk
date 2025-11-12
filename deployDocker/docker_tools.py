@@ -85,5 +85,9 @@ def stop_container(client: DockerClient, container_name: str):
     client.containers.get(container_name).stop()
 
 
+def destroy_container(client: DockerClient, container_name: str):
+    client.containers.get(container_name).remove(force=True)
+
+
 def container_stats(client: DockerClient, container_name: str):
     return client.api.stats(container_name, decode=True, stream=False)

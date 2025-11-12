@@ -3,7 +3,13 @@ import time
 
 from dulwich.porcelain import remove
 
-from deployDocker.docker_tools import get_docker_client, pull_image, start_container
+from deployDocker.docker_tools import (
+    destroy_container,
+    get_docker_client,
+    pull_image,
+    start_container,
+    stop_container,
+)
 from serviceCatalog.models import Instance
 
 # Logging konfigurieren (kann an Django-Logging angepasst werden)
@@ -35,29 +41,10 @@ def deploy_instance(instance_id):
     try:
         logger.info(f"Fetching instance with id {instance_id}")
         instance = Instance.objects.get(id=instance_id)
-    except Instance.DoesNotExist:
-        logger.error(f"Instance with id {instance_id} does not exist.")
-        return
-    except Exception as e:
-        logger.exception(f"Error fetching instance {instance_id}: {e}")
-        return
-
-    try:
         logger.info("Getting Docker client...")
+
         client = get_docker_client()
-    except Exception as e:
-        logger.exception(f"Failed to get Docker client: {e}")
-        return
-
-    try:
         get_image(instance.image_name)
-    except Exception as e:
-        logger.exception(
-            f"Failed to ensure image '{instance.image_name}' is available: {e}"
-        )
-        return
-
-    try:
         logger.info(f"Starting container for instance '{instance.name}'")
         container = start_container(
             client,
@@ -68,15 +55,18 @@ def deploy_instance(instance_id):
             True,
             instance.restart_policy,
         )
+
     except Exception as e:
+        instance.docker_output = {"error": str(e)}
+        instance.save()
+        instance.status = "failed"
         logger.exception(
             f"Failed to start container for instance '{instance.name}': {e}"
         )
         return
 
-    # Container-ID speichern
     try:
-        container.reload()  # sicherstellen, dass status geladen ist
+        container.reload()
         instance.container_id = container.id
         instance.status = DOCKER_TO_INSTANCE_STATUS.get(container.status, "pending")
         instance.save()
@@ -91,7 +81,8 @@ def deploy_instance(instance_id):
         instance.save()
         return
 
-    exit_codes = ["running", "exited", "dead"]
+    exit_codes = ["running", "exited", "dead", "failed"]
+
     try:
         while True:
             container.reload()
@@ -110,3 +101,29 @@ def deploy_instance(instance_id):
         return
 
     logger.info(f"Deployment of instance '{instance.name}' finished successfully.")
+
+
+def pause_instance(instance_id):
+    logger.info(f"Fetching instance with id {instance_id}")
+    instance = Instance.objects.get(id=instance_id)
+    logger.info("Getting Docker client...")
+    client = get_docker_client()
+    stop_container(client, instance.name)
+    logger.info(f"Container '{instance.name}' paused.")
+    instance.status = "paused"
+    instance.save()
+
+
+def destroy_instance(instance_id):
+    logger.info(f"Fetching instance with id {instance_id}")
+    instance = Instance.objects.get(id=instance_id)
+    logger.info("Getting Docker client...")
+    client = get_docker_client()
+    try:
+        destroy_container(client, instance.name)
+    except Exception as e:
+        logger.exception(f"Failed to destroy container '{instance.name}': {e}")
+        return
+    else:
+        Instance.objects.filter(id=instance_id).delete()
+        logger.info(f"Container '{instance.name}' destroyed.")
