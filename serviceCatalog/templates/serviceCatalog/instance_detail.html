@@ -1,0 +1,95 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+
+  <div class="container my-4">
+    <div class="row">
+      <div class="col-lg-8 mx-auto">
+
+        <!-- Instance Card -->
+        <div class="card border mb-4 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <h3 class="card-title fw-bold mb-0">{{ instance.name|default:"Unnamed Instance" }}</h3>
+              <span class="badge bg-secondary">{{ instance.id }}</span>
+            </div>
+            <p class="card-text text-secondary mb-3">
+              Module: <strong>{{ instance.module.name }}</strong>
+            </p>
+
+            <!-- Docker Info -->
+            <ul class="list-unstyled small mb-3">
+              <li><strong>Image:</strong> {{ instance.image_name|default:"N/A" }}</li>
+              {% if instance.ports %}
+                <li><strong>Ports:</strong>
+                  {% for container_port, host_port in instance.ports.items %}
+                    {{ container_port }} → {{ host_port }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                </li>
+              {% endif %}
+              {% if instance.environment %}
+                <li><strong>Environment:</strong>
+                  {% for key, value in instance.environment.items %}
+                    {{ key }}={{ value }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                </li>
+              {% endif %}
+              {% if instance.restart_policy %}
+                <li><strong>Restart Policy:</strong>
+                  {% for key, value in instance.restart_policy.items %}
+                    {{ key }}={{ value }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                </li>
+              {% endif %}
+              {% if instance.container_id %}
+                <li><strong>Container ID:</strong> {{ instance.container_id }}</li>
+              {% endif %}
+            </ul>
+
+            <p class="text-muted mb-1">
+              <strong>Status:</strong>
+              <span class="badge
+                           {% if instance.status == 'running' %}bg-success
+                           {% elif instance.status == 'failed' %}bg-danger
+                           {% elif instance.status == 'destroyed' %}bg-dark
+                           {% elif instance.status == 'paused' %}bg-warning text-dark
+                           {% else %}bg-secondary{% endif %}">
+                {{ instance.status }}
+              </span>
+            </p>
+
+            {% if instance.docker_output %}
+              <div class="border-top pt-3">
+                <p class="text-muted mb-1">
+                  <strong>Docker Output:</strong><br>
+                  {{ instance.docker_output }}
+                </p>
+              </div>
+            {% endif %}
+
+            <div class="border-top pt-3">
+              <p class="text-muted mb-1">
+                <strong>Owner:</strong> {{ instance.owner.username }}<br>
+                <strong>Created:</strong> {{ instance.created_at|date:"Y-m-d H:i" }}<br>
+                <strong>Last updated:</strong> {{ instance.updated_at|date:"Y-m-d H:i" }}
+              </p>
+            </div>
+
+            {% if user.is_authenticated and user == instance.owner %}
+              <div class="mt-3 d-flex gap-2">
+                <a href="#" class="btn btn-danger btn-sm flex-fill">Delete</a>
+                <a href="{% url 'index' %}" class="btn btn-outline-secondary btn-sm flex-fill">Back</a>
+              </div>
+            {% else %}
+              <div class="mt-3">
+                <a href="{% url 'index' %}" class="btn btn-outline-secondary btn-sm">Back to list</a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

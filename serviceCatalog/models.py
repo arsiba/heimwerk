@@ -77,6 +77,8 @@ class Instance(models.Model):
     name = models.CharField(
         max_length=50, unique=True, help_text="Unique name for the instance"
     )
+    slug = models.SlugField(max_length=120, blank=True)
+
     owner = models.ForeignKey(User, on_delete=models.RESTRICT, related_name="instances")
     module = models.ForeignKey(
         Module, on_delete=models.CASCADE, related_name="instances"
@@ -122,8 +124,18 @@ class Instance(models.Model):
     def __str__(self):
         return f"{self.name} ({self.module.name})"
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
     def is_active(self):
         return self.status == "running"
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+
+        return reverse("instance-detail", args=[self.slug])
 
 
 class UserProfile(models.Model):

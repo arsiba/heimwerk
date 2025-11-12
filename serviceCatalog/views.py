@@ -1,5 +1,8 @@
+import json
 import threading
 
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View, generic
 
 from deployDocker.deploy_logic import deploy_instance
@@ -73,15 +76,6 @@ class InstanceListView(generic.ListView):
         return new_context
 
 
-import json
-
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.shortcuts import get_object_or_404, redirect, render
-from django.views import View
-
-from .models import Instance, Module
-
-
 def user_can_deploy(user):
     return user.is_superuser or user.groups.filter(name__in=["user", "editor"]).exists()
 
@@ -121,7 +115,6 @@ class DeployView(LoginRequiredMixin, UserPassesTestMixin, View):
         env_raw = request.POST.get("environment", "{}").strip()
         restart_policy_raw = request.POST.get("restart_policy", "{}").strip()
 
-        # Optional: Ersetze einfache Quotes durch doppelte, falls User falsch eingibt
         ports_raw = ports_raw.replace("'", '"')
         env_raw = env_raw.replace("'", '"')
         restart_policy_raw = restart_policy_raw.replace("'", '"')
@@ -176,3 +169,15 @@ class DeployView(LoginRequiredMixin, UserPassesTestMixin, View):
         ).start()
 
         return redirect("instance-list")
+
+
+class InstanceDetailView(LoginRequiredMixin, UserPassesTestMixin, generic.DetailView):
+    """Generic class-based detail view for a instance."""
+
+    def test_func(self):
+        user = self.request.user
+        return user.is_superuser or user == self.get_object().owner
+
+    model = Instance
+    slug_field = "slug"
+    slug_url_kwarg = "slug"

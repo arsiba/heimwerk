@@ -8,4 +8,9 @@ urlpatterns = [
     path("module/<slug:slug>", views.ModuleDetailView.as_view(), name="module-detail"),
     path("deployment", views.InstanceListView.as_view(), name="instance-list"),
     path("deploy/<slug:slug>", views.DeployView.as_view(), name="deploy-instance"),
+    path(
+        "instance/<slug:slug>",
+        views.InstanceDetailView.as_view(),
+        name="instance-detail",
+    ),
 ]

@@ -16,7 +16,9 @@
             <div class="mb-3">
                 <label for="id_name" class="form-label">Instance Name</label>
                 <input type="text" class="form-control" id="id_name" name="name"
-                       value="{{ old_data.name|default:'' }}" required>
+                       value="{{ old_data.name|default:'' }}" required
+                       pattern="^\S+$"
+                       title="Whitespace is not allowed">
             </div>
 
         <!-- Docker Image -->
