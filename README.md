@@ -9,7 +9,7 @@
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=arsiba_heimwerk&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=arsiba_heimwerk)
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=arsiba_heimwerk&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=arsiba_heimwerk)
 
-**Heimwerk** is a self-service catalog for deploying services. Users can select from a catalog of prebuilt modules, view them, and deploy them with a single click. The system simplifies service deployment in a homelab and enables standardized deployments.
+**Heimwerk** is a Platform for deploying Docker containers. Users can select from a catalog of prebuilt modules, view them, and deploy them with a single click. The system simplifies service deployment in a homelab and enables standardized deployments.
 
 The recommended use case is in combination with **Pangolin**, to automatically make deployed services accessible to the user, including subdomain, network rules, and access control.
 
@@ -78,7 +78,7 @@ curl http://localhost:2375/version
 
 You should see JSON output containing Docker version information.
 
-### ⚠️ Security Notice
+### Security Notice
 
 Exposing Docker over TCP **without TLS** is insecure and allows full control of your system. For local development, it's recommended to either:
 
