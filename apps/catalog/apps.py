@@ -1,10 +1,11 @@
 from django.apps import AppConfig
 
+from core.docker.client import init_docker
+
 
 class CatalogConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.catalog"
 
     def ready(self):
-        pass
-        # client = init_docker()
+        client = init_docker()

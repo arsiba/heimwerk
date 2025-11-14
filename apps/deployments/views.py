@@ -12,7 +12,7 @@ from core.docker.deploy import deploy_instance
 
 # Create your views here.
 class DeployView(LoginRequiredMixin, UserPassesTestMixin, View):
-    template_name = "deploy_form.html"
+    template_name = "deployments/deploy_form.html"
 
     def test_func(self):
         return user_can_deploy(self.request.user)

@@ -47,7 +47,7 @@
                 <div class="border-top pt-3 mt-auto">
                   <div class="d-flex gap-2">
                     {% if user.is_authenticated and can_deploy %}
-                      <a href="{% url 'deploy-instance' slug=module.slug %}" class="btn btn-primary btn-sm flex-fill">Deploy</a>
+                      <a href="{% url 'deployments:deploy-instance' slug=module.slug %}" class="btn btn-primary btn-sm flex-fill">Deploy</a>
                     {% endif %}
                     <a href="{{ module.get_absolute_url }}" class="btn btn-outline-secondary btn-sm">Details</a>
                   </div>

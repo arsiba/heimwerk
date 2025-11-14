@@ -22,6 +22,10 @@ urlpatterns = [
     path("", RedirectView.as_view(url="catalog/", permanent=True)),
     # Authentication routes (login, logout, password management)
     path("accounts/", include("django.contrib.auth.urls")),
+    path(
+        "deployments/",
+        include(("apps.deployments.urls", "deployments"), namespace="deployments"),
+    ),
 ]
 
 # Serve static files during development
