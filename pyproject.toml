@@ -1,8 +1,7 @@
 [tool.black]
 line-length = 88
-target-version = ['py311']
-skip-string-normalization = true
+target-version = ['py310']
+include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
-line_length = 88
