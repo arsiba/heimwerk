@@ -9,6 +9,29 @@
             <div class="alert alert-danger">{{ error }}</div>
         {% endif %}
 
+        <div class="mb-3">
+            <h4 class="">Container Ports</h4>
+            <div class="">{{ module.container_port }}</div>
+        </div>
+
+           <!-- Docker Image -->
+        <div class="mb-3">
+            <h4>Docker Image</h4>
+            <div class=""> {{module.image_name }} </div>
+        </div>
+
+        <!-- Environment -->
+        <div class="mb-3">
+            <h4>Environment Variables</h4>
+            <div>{{ module.default_env }}</div>
+        </div>
+
+<!-- Restart Policy -->
+        <div class="mb-3">
+            <h4>Restart Policy</h4>
+            <div>{{ module.default_restart_policy }}</div>
+        </div>
+
         <form method="post">
             {% csrf_token %}
 
@@ -16,37 +39,9 @@
             <div class="mb-3">
                 <label for="id_name" class="form-label">Instance Name</label>
                 <input type="text" class="form-control" id="id_name" name="name"
-                       value="{{ old_data.name|default:'' }}" required
+                       value="" required
                        pattern="^\S+$"
                        title="Whitespace is not allowed">
-            </div>
-
-        <!-- Docker Image -->
-            <div class="mb-3">
-                <label for="id_image_name" class="form-label">Docker Image</label>
-                <input type="text" class="form-control" id="id_image_name" name="image_name"
-                       value="{{ old_data.image_name|default:module.image_name }}" required>
-            </div>
-
-<!-- Ports -->
-            <div class="mb-3">
-                <label for="id_ports" class="form-label">Ports (JSON)</label>
-                <textarea class="form-control" id="id_ports" name="ports" rows="2">{{ old_data.ports|default:default_ports_json }}</textarea>
-                <small class="text-muted">e.g. {"80/tcp": 8080}</small>
-            </div>
-
-<!-- Environment -->
-            <div class="mb-3">
-                <label for="id_env" class="form-label">Environment Variables (JSON)</label>
-                <textarea class="form-control" id="id_env" name="environment" rows="3">{{ old_data.environment|default:default_env_json }}</textarea>
-                <small class="text-muted">e.g. {"ENV_VAR": "value"}</small>
-            </div>
-
-<!-- Restart Policy -->
-            <div class="mb-3">
-                <label for="id_restart_policy" class="form-label">Restart Policy (JSON)</label>
-                <textarea class="form-control" id="id_restart_policy" name="restart_policy" rows="2">{{ old_data.restart_policy|default:default_restart_policy_json }}</textarea>
-                <small class="text-muted">e.g. {"Name": "always"}</small>
             </div>
 
             <button type="submit" class="btn btn-primary">Deploy</button>

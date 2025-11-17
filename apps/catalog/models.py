@@ -25,8 +25,8 @@ class Module(models.Model):
         help_text="Docker image name, e.g., nginx:latest",
         default="willFail:fail",
     )
-    default_ports = models.JSONField(
-        blank=True, null=True, help_text="Default port mapping, e.g., {'80/tcp': 8080}"
+    container_port = models.PositiveIntegerField(
+        blank=True, null=True, help_text="Default port mapping, e.g. 80"
     )
     default_env = models.JSONField(
         blank=True,
@@ -92,9 +92,14 @@ class Instance(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
 
     # Store actual runtime parameters and output from Docker
-    ports = models.JSONField(
-        blank=True, null=True, help_text="Port mapping used for this instance"
+    container_port = models.PositiveIntegerField(
+        blank=True, null=True, help_text="Container Port used for this instance"
     )
+
+    host_port = models.PositiveIntegerField(
+        blank=True, null=True, help_text="Host Port used for this instance"
+    )
+
     environment = models.JSONField(
         blank=True, null=True, help_text="Environment variables used"
     )

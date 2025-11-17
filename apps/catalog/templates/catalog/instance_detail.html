@@ -20,11 +20,14 @@
             <!-- Docker Info -->
             <ul class="list-unstyled small mb-3">
               <li><strong>Image:</strong> {{ instance.image_name|default:"N/A" }}</li>
-              {% if instance.ports %}
-                <li><strong>Ports:</strong>
-                  {% for container_port, host_port in instance.ports.items %}
-                    {{ container_port }} → {{ host_port }}{% if not forloop.last %}, {% endif %}
-                  {% endfor %}
+              {% if instance.container_port %}
+                <li><strong>Container Ports:</strong>
+                  {{instance.container_port}}
+                </li>
+              {% endif %}
+              {% if instance.host_port %}
+                <li><strong>Host Ports:</strong>
+                  {{instance.host_port}}
                 </li>
               {% endif %}
               {% if instance.environment %}

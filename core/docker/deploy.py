@@ -1,4 +1,5 @@
 import logging
+import random
 import time
 
 from apps.catalog.models import Instance
@@ -36,19 +37,20 @@ def get_image(image_name):
 
 
 def deploy_instance(instance_id):
+    logger.info(f"Fetching instance with id {instance_id}")
+    instance = Instance.objects.get(id=instance_id)
     try:
-        logger.info(f"Fetching instance with id {instance_id}")
-        instance = Instance.objects.get(id=instance_id)
         logger.info("Getting Docker client...")
 
         client = get_docker_client()
         get_image(instance.image_name)
         logger.info(f"Starting container for instance '{instance.name}'")
+        ports = {f"{instance.container_port}/tcp": instance.host_port}
         container = start_container(
             client,
             instance.image_name,
             instance.name,
-            instance.ports,
+            ports,
             instance.environment,
             True,
             instance.restart_policy,
@@ -125,3 +127,29 @@ def destroy_instance(instance_id):
     else:
         Instance.objects.filter(id=instance_id).delete()
         logger.info(f"Container '{instance.name}' destroyed.")
+
+
+def get_allocated_ports():
+    client = get_docker_client()
+    containers = client.containers.list()
+    used_ports = set()
+    for container in containers:
+        container.reload()
+        ports = container.attrs["NetworkSettings"]["Ports"] or {}
+        for container_port, host_bindings in ports.items():
+            if host_bindings:
+                for binding in host_bindings:
+                    host_port = binding.get("HostPort")
+                    if host_port:
+                        used_ports.add(int(host_port))
+
+    return used_ports
+
+
+def get_random_free_port():
+    range_lower = 49152
+    range_upper = 65535
+    while True:
+        port = random.randint(range_lower, range_upper)
+        if port not in get_allocated_ports():
+            return port
