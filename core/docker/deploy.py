@@ -9,6 +9,7 @@ from core.docker.client import (
     pull_image,
     start_container,
     stop_container,
+    unstop_container,
 )
 
 # Logging konfigurieren (kann an Django-Logging angepasst werden)
@@ -46,6 +47,7 @@ def deploy_instance(instance_id):
         get_image(instance.image_name)
         logger.info(f"Starting container for instance '{instance.name}'")
         ports = {f"{instance.container_port}/tcp": instance.host_port}
+        restart_policy = {"Name": instance.default_restart_policy}
         container = start_container(
             client,
             instance.image_name,
@@ -53,7 +55,7 @@ def deploy_instance(instance_id):
             ports,
             instance.environment,
             True,
-            instance.restart_policy,
+            restart_policy,
         )
 
     except Exception as e:
@@ -111,6 +113,17 @@ def pause_instance(instance_id):
     stop_container(client, instance.name)
     logger.info(f"Container '{instance.name}' paused.")
     instance.status = "paused"
+    instance.save()
+
+
+def unpause_instance(instance_id):
+    logger.info(f"Fetching instance with id {instance_id}")
+    instance = Instance.objects.get(id=instance_id)
+    logger.info("Getting Docker client...")
+    client = get_docker_client()
+    unstop_container(client, instance.name)
+    logger.info(f"Container '{instance.name}' unpaused.")
+    instance.status = "running"
     instance.save()
 
 

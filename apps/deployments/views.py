@@ -47,7 +47,7 @@ class DeployView(LoginRequiredMixin, UserPassesTestMixin, View):
             container_port=module.container_port,
             host_port=get_random_free_port(),
             environment=module.default_env,
-            restart_policy=module.default_restart_policy,
+            default_restart_policy=module.default_restart_policy,
         )
 
         threading.Thread(

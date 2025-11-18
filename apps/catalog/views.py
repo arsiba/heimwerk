@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View, generic
 from django.views.decorators.http import require_POST
 
-from core.docker.deploy import destroy_instance, pause_instance
+from core.docker.deploy import destroy_instance, pause_instance, unpause_instance
 
 from .models import Instance, Module
 
@@ -103,6 +103,9 @@ def instance_action_view(request, instance_id):
         if action == "pause":
             pause_instance(instance.id)
             messages.success(request, f"Instance '{instance.name}' paused.")
+        elif action == "unpause":
+            unpause_instance(instance.id)
+            messages.success(request, f"Instance '{instance.name}' unpaused.")
         elif action == "destroy":
             destroy_instance(instance.id)
             messages.success(request, f"Instance '{instance.name}' destroyed.")

@@ -18,7 +18,7 @@
                     {{ instance.name|default:"Unnamed Module" }}
                   </h5>
                   <span class="badge
-                               {% if instance.status == 'active' %}bg-success
+                               {% if instance.status == 'running' %}bg-success
                                {% elif instance.status == 'error' %}bg-danger
                                {% elif instance.status == 'pending' %}bg-warning text-dark
                                {% else %}bg-secondary
@@ -35,16 +35,9 @@
                   <li><i class="bi bi-box me-2"></i><strong>Module:</strong> {{ instance.module|default:"N/A" }}</li>
                 </ul>
 
-                <!--  Output -->
-                <div class="bg-light border rounded p-3 mb-3 flex-grow-1">
-                  <h6 class="text-secondary fw-semibold mb-2">Docker Output</h6>
-                  <pre class="small text-muted mb-0" style="white-space: pre-wrap;">{{ instance.docker_output|default:"No output available." }}</pre>
-                </div>
-
                 <!-- Actions -->
-                <div class="border-top pt-3 mt-auto d-flex gap-2">
-                  <a href="#" class="btn btn-outline-primary btn-sm w-100">Manage</a>
-                  <a href="{{ instance.get_absolute_url }}" class="btn btn-outline-secondary btn-sm w-100">Details</a>
+                <div class="pt-1 mt-auto d-flex">
+                  <a href="{{ instance.get_absolute_url }}" class="btn btn-outline-primary btn-sm w-100">Manage</a>
                 </div>
               </div>
             </div>

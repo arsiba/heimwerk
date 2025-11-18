@@ -6,6 +6,13 @@ from django.db.models import UniqueConstraint
 from django.db.models.functions import Lower
 from django.utils.text import slugify
 
+restart_choices = [
+    ("no", "No"),
+    ("on-failure", "On failure"),
+    ("always", "Always"),
+    ("unless-stopped", "Unless stopped"),
+]
+
 
 class Module(models.Model):
     """
@@ -33,9 +40,10 @@ class Module(models.Model):
         null=True,
         help_text="Default environment variables, e.g., {'ENV_VAR': 'value'}",
     )
-    default_restart_policy = models.JSONField(
+    default_restart_policy = models.CharField(
         blank=True,
         null=True,
+        choices=restart_choices,
         help_text="Default restart policy, e.g., {'Name': 'always'}",
     )
 
@@ -103,8 +111,10 @@ class Instance(models.Model):
     environment = models.JSONField(
         blank=True, null=True, help_text="Environment variables used"
     )
-    restart_policy = models.JSONField(
-        blank=True, null=True, help_text="Restart policy used"
+    default_restart_policy = models.CharField(
+        blank=True,
+        null=True,
+        choices=restart_choices,
     )
     container_id = models.CharField(
         max_length=64, blank=True, null=True, help_text="Docker container ID"

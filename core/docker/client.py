@@ -91,6 +91,10 @@ def stop_container(client: DockerClient, container_name: str):
     client.containers.get(container_name).stop()
 
 
+def unstop_container(client: DockerClient, container_name: str):
+    client.containers.get(container_name).start()
+
+
 def destroy_container(client: DockerClient, container_name: str):
     client.containers.get(container_name).remove(force=True)
 

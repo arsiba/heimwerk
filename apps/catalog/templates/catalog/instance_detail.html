@@ -83,11 +83,18 @@
                 <a href="{% url 'index' %}" class="btn btn-outline-secondary btn-sm flex-fill">Back</a>
 
                 <!-- Pause button -->
+
                 <form action="{% url 'instance-action' instance.id %}" method="post" class="flex-fill">
                   {% csrf_token %}
-                  <input type="hidden" name="action" value="pause">
-                  <button type="submit" class="btn btn-outline-secondary btn-sm w-100">Pause</button>
+                  {% if instance.status == 'running' %}
+                    <input type="hidden" name="action" value="pause">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm w-100">Pause</button>
+                  {% elif instance.status == 'paused' %}
+                    <input type="hidden" name="action" value="unpause">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm w-100">Unpause</button>
+                  {% endif %}
                 </form>
+
 
                 <!-- Delete button -->
                 <form action="{% url 'instance-action' instance.id %}" method="post" class="flex-fill">

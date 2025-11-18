@@ -34,9 +34,8 @@
               {% endif %}
               {% if object.default_restart_policy %}
                 <li><strong>Restart Policy:</strong>
-                  {% for key, value in object.default_restart_policy.items %}
-                    {{ key }}={{ value }}{% if not forloop.last %}, {% endif %}
-                  {% endfor %}
+                  {{ object.default_restart_policy }}
+                </li>
               {% endif %}
             </ul>
 
