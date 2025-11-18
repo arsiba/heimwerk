@@ -7,6 +7,8 @@ from django.views.decorators.http import require_POST
 from core.docker.deploy import destroy_instance, pause_instance, unpause_instance
 
 from .models import Instance, Module
+from django.views.generic.edit import CreateView
+from django.views.generic.edit import UpdateView
 
 
 def index(request):
@@ -78,6 +80,10 @@ def user_can_deploy(user):
     return user.is_superuser or user.groups.filter(name__in=["user", "editor"]).exists()
 
 
+def user_can_edit(user):
+    return user.is_superuser or user.groups.filter(name="editor").exists()
+
+
 class InstanceDetailView(LoginRequiredMixin, UserPassesTestMixin, generic.DetailView):
     """Generic class-based detail view for a instance."""
 
@@ -116,3 +122,23 @@ def instance_action_view(request, instance_id):
         messages.error(request, f"Failed to perform action '{action}': {e}")
 
     return redirect("instance-detail", instance.slug)
+
+
+class ModuleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    def test_func(self):
+        user = self.request.user
+        return user_can_edit(user)
+
+    model = Module
+    fields = "__all__"
+
+
+class ModuleUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    def test_func(self):
+        user = self.request.user
+        return user_can_edit(user)
+
+    model = Module
+    slug_field = "slug"
+    slug_url_kwarg = "slug"
+    fields = "__all__"
