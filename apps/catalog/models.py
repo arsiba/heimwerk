@@ -76,9 +76,10 @@ class Instance(models.Model):
         ("pending", "Pending"),
         ("running", "Running"),
         ("paused", "Paused"),
-        ("failed", "Failed"),
+        ("exited", "Exited"),
         ("stopped", "Stopped"),
         ("destroyed", "Destroyed"),
+        ("failed", "Failed"),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

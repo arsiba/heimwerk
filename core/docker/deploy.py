@@ -21,7 +21,7 @@ DOCKER_TO_INSTANCE_STATUS = {
     "restarting": "pending",
     "running": "running",
     "paused": "paused",
-    "exited": "stopped",
+    "exited": "exited",
     "dead": "failed",
     "removing": "destroyed",
 }
@@ -37,17 +37,49 @@ def get_image(image_name):
         raise
 
 
+def update_instance_status(instance, container):
+    """Reload container, update instance status and save."""
+    container.reload()
+    docker_status = container.status.lower().split()[0]
+    logger.info(f"Docker Status: {docker_status}")
+    instance.status = DOCKER_TO_INSTANCE_STATUS.get(docker_status, "pending")
+    instance.save()
+    return docker_status
+
+
+def monitor_container(
+    instance, container, max_checks=None, interval=10, ignore_exit_codes=False
+):
+    """Monitor container until it reaches a terminal status or max_checks is reached."""
+    exit_codes = ["running", "exited", "dead", "failed"]
+    count = 0
+
+    while True:
+        status = update_instance_status(instance, container)
+        logger.info(f"[{instance.name}] Docker Status: {status}")
+
+        if status in exit_codes and not ignore_exit_codes:
+            logger.info(f"Container reached terminal status: {status}")
+            break
+
+        count += 1
+        if max_checks and count >= max_checks:
+            break
+
+        time.sleep(interval)
+
+
 def deploy_instance(instance_id):
     logger.info(f"Fetching instance with id {instance_id}")
     instance = Instance.objects.get(id=instance_id)
-    try:
-        logger.info("Getting Docker client...")
 
+    try:
         client = get_docker_client()
         get_image(instance.image_name)
-        logger.info(f"Starting container for instance '{instance.name}'")
+
         ports = {f"{instance.container_port}/tcp": instance.host_port}
         restart_policy = {"Name": instance.default_restart_policy}
+
         container = start_container(
             client,
             instance.image_name,
@@ -57,50 +89,18 @@ def deploy_instance(instance_id):
             True,
             restart_policy,
         )
-
+        logger.info(f"Container '{instance.name}' started.")
     except Exception as e:
-        instance.docker_output = {"error": str(e)}
-        instance.save()
+        logger.exception(f"Failed to start container '{instance.name}': {e}")
         instance.status = "failed"
-        logger.exception(
-            f"Failed to start container for instance '{instance.name}': {e}"
-        )
-        return
-
-    try:
-        container.reload()
-        instance.container_id = container.id
-        instance.status = DOCKER_TO_INSTANCE_STATUS.get(container.status, "pending")
-        instance.save()
-        logger.info(
-            f"Container '{container.id}' started with initial status: {container.status}"
-        )
-    except Exception as e:
-        logger.exception(
-            f"Failed to save container info for instance '{instance.name}': {e}"
-        )
         instance.docker_output = {"error": str(e)}
         instance.save()
         return
 
-    exit_codes = ["running", "exited", "dead", "failed"]
+    monitor_container(instance, container)
+    logger.info("Double checking instance status")
 
-    try:
-        while True:
-            container.reload()
-            docker_status = container.status
-            instance.status = DOCKER_TO_INSTANCE_STATUS.get(docker_status, "pending")
-            instance.save()
-            logger.info(f"[{instance.name}] Docker Status: {docker_status}")
-
-            if docker_status in exit_codes:
-                logger.info(f"Container reached terminal status: {docker_status}")
-                break
-
-            time.sleep(1)
-    except Exception as e:
-        logger.exception(f"Error while monitoring container '{instance.name}': {e}")
-        return
+    monitor_container(instance, container, max_checks=10, ignore_exit_codes=True)
 
     logger.info(f"Deployment of instance '{instance.name}' finished successfully.")
 

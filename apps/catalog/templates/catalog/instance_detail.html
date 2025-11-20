@@ -53,7 +53,7 @@
               <strong>Status:</strong>
               <span class="badge
                            {% if instance.status == 'running' %}bg-success
-                           {% elif instance.status == 'failed' %}bg-danger
+                           {% elif instance.status == 'failed'  or instance.status == 'exited'  %}bg-danger
                            {% elif instance.status == 'destroyed' %}bg-dark
                            {% elif instance.status == 'paused' %}bg-warning text-dark
                            {% else %}bg-secondary{% endif %}">
