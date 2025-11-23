@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "apps.catalog.apps.CatalogConfig",
     "apps.deployments.apps.DeploymentsConfig",
     "apps.users.apps.UsersConfig",
+    "apps.hosts.apps.HostsConfig",
 ]
 
 
@@ -68,6 +69,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.catalog.context_processors.global_user_context",
+                "apps.catalog.context_processors.global_host_context",
             ],
         },
     },

@@ -1,0 +1,107 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+    <div class="container my-5">
+
+    <!-- Page header -->
+        <div class="mb-4">
+            <h2 class="mb-1">Heimwerk Settings</h2>
+            <p class="text-muted mb-0">
+                Manage the connection settings for your Docker host.
+            </p>
+        </div>
+
+    <!-- Alerts -->
+        {% if error %}
+            <div class="alert alert-danger mb-3">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        {% if success %}
+            <div class="alert alert-primary mb-3">
+                {{ success }}
+            </div>
+        {% endif %}
+
+        {% if connection %}
+            <div class="alert alert-success mb-3">
+                {{ connection }}
+            </div>
+        {% endif %}
+
+        <form method="post" class="mt-4">
+            {% csrf_token %}
+
+        <!-- Section: Host info + Test button -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+                <div class="mb-3 mb-md-0">
+                    <h4 class="mb-1">Host: {{ docker_host.name }}</h4>
+                    {% if module %}
+                        <p class="text-muted mb-0">{{ module.description }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="text-md-end">
+                    <div class="mb-2">
+                        <span class="fw-semibold me-2">Connection status:</span>
+                        <span class="{% if docker_host.active %}text-success{% else %}text-danger{% endif %}">
+                            {% if docker_host.active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </div>
+                    <button type="submit" name="action" value="test" class="btn btn-outline-primary btn-sm">
+                        Test Connection
+                    </button>
+                </div>
+            </div>
+
+            <hr class="mb-4">
+
+        <!-- Section: Host URL -->
+            <div class="mb-4">
+                <label for="id_base_url" class="form-label">Host URL</label>
+                <input
+                    type="text"
+                    class="form-control"
+                    id="id_base_url"
+                    name="base_url"
+                    value="{{ docker_host.base_url }}"
+                    placeholder="e.g. tcp://127.0.0.1:2375 or unix:///var/run/docker.sock"
+                    required
+                >
+                <div class="form-text">
+                    The Docker daemon must be reachable at this address.
+                </div>
+            </div>
+
+        <!-- Section: Pangolin features -->
+            <div class="mb-4">
+                <div class="form-check">
+                    <input
+                        type="checkbox"
+                        class="form-check-input"
+                        id="id_pangolin_features"
+                        name="pangolin_features"
+                        {% if docker_host.pangolin_features %}checked{% endif %}
+                    >
+                    <label for="id_pangolin_features" class="form-check-label">
+                        Enable Pangolin features
+                    </label>
+                </div>
+                <div class="form-text">
+                    Optional features that depend on Pangolin being available on this host.
+                </div>
+            </div>
+
+        <!-- Actions -->
+            <div class="d-flex gap-2">
+                <button type="submit" name="action" value="save" class="btn btn-primary">
+                    Save
+                </button>
+                <a href="{% url 'module-list' %}" class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

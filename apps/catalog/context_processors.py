@@ -1,6 +1,7 @@
 # main/context_processors.py
 
 from .models import Instance
+from ..hosts.models import DockerHost
 
 
 def global_user_context(request):
@@ -33,3 +34,8 @@ def global_user_context(request):
         "all_instances_count": all_instances_count,
         "can_deploy": can_deploy,
     }
+
+
+def global_host_context(request):
+    active = DockerHost.objects.filter(active=True).first()
+    return {"active_host": active}

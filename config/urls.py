@@ -26,6 +26,7 @@ urlpatterns = [
         "deployments/",
         include(("apps.deployments.urls", "deployments"), namespace="deployments"),
     ),
+    path("hosts/", include("apps.hosts.urls")),
 ]
 
 # Serve static files during development

@@ -4,9 +4,7 @@ from docker import DockerClient
 _client = None
 
 
-def init_docker(
-    docker_ip: str = "127.0.0.1", docker_port: int = 2375, local: bool = False
-):
+def init_docker(host_url: str = "tcp://127.0.0.1:2375", local: bool = False):
     """
     Initialize and return a Docker client connected to a specified Docker host.
 
@@ -31,9 +29,26 @@ def init_docker(
             base_url = "unix://var/run/docker.sock"
             _client = docker.DockerClient(base_url=base_url)
         else:
-            base_url = f"tcp://{docker_ip}:{docker_port}"
-            _client = docker.DockerClient(base_url=base_url)
+            _client = docker.DockerClient(base_url=host_url)
     return _client
+
+
+def test_client_config(host_url: str = "tcp://127.0.0.1:2375"):
+    try:
+        test_client = docker.DockerClient(base_url=host_url)
+        test_client.ping()
+        test_client.close()
+        return True
+    except Exception:
+        return False
+
+
+def test_connection():
+    try:
+        result = get_docker_client().ping()
+        return result == "OK"
+    except Exception:
+        return False
 
 
 def get_docker_client():

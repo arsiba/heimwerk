@@ -2,50 +2,71 @@
 
 {% block content %}
     <div class="container my-4">
-        <h2>Deploy Module: {{ module.name }}</h2>
-        <p>{{ module.description }}</p>
+        {% if not active_host %}
+            <div class="alert alert-danger p-4" role="alert">
+                <h4 class="alert-heading mb-2">Your Docker Host is not active!</h4>
+                <p class="mb-2">
+                    A Docker host is required for running deployments.
+                    Please prepare a machine running Docker, make sure remote access is enabled,
+                    and enter its connection URL.
+                </p>
 
-        {% if error %}
-            <div class="alert alert-danger">{{ error }}</div>
-        {% endif %}
+                <hr class="my-3">
 
-        <div class="mb-3">
-            <h4 class="">Container Ports</h4>
-            <div class="">{{ module.container_port }}</div>
-        </div>
-
-           <!-- Docker Image -->
-        <div class="mb-3">
-            <h4>Docker Image</h4>
-            <div class=""> {{module.image_name }} </div>
-        </div>
-
-        <!-- Environment -->
-        <div class="mb-3">
-            <h4>Environment Variables</h4>
-            <div>{{ module.default_env }}</div>
-        </div>
-
-<!-- Restart Policy -->
-        <div class="mb-3">
-            <h4>Restart Policy</h4>
-            <div>{{ module.default_restart_policy }}</div>
-        </div>
-
-        <form method="post">
-            {% csrf_token %}
-
-        <!-- Instance Name -->
-            <div class="mb-3">
-                <label for="id_name" class="form-label">Instance Name</label>
-                <input type="text" class="form-control" id="id_name" name="name"
-                       value="" required
-                       pattern="^\S+$"
-                       title="Whitespace is not allowed">
+                <p class="mb-0">
+                    Configure your host in the
+                    <a href="{% url 'host-form' %}" class="alert-link">
+                        settings section
+                    </a>.
+                </p>
             </div>
 
-            <button type="submit" class="btn btn-primary">Deploy</button>
-            <a href="{% url 'module-list' %}" class="btn btn-secondary">Cancel</a>
-        </form>
+        {% else %}
+            <h2>Deploy Module: {{ module.name }}</h2>
+            <p>{{ module.description }}</p>
+
+            {% if error %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+
+            <div class="mb-3">
+                <h4 class="">Container Ports</h4>
+                <div class="">{{ module.container_port }}</div>
+            </div>
+
+           <!-- Docker Image -->
+            <div class="mb-3">
+                <h4>Docker Image</h4>
+                <div class=""> {{module.image_name }} </div>
+            </div>
+
+        <!-- Environment -->
+            <div class="mb-3">
+                <h4>Environment Variables</h4>
+                <div>{{ module.default_env }}</div>
+            </div>
+
+<!-- Restart Policy -->
+            <div class="mb-3">
+                <h4>Restart Policy</h4>
+                <div>{{ module.default_restart_policy }}</div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+        <!-- Instance Name -->
+                <div class="mb-3">
+                    <label for="id_name" class="form-label">Instance Name</label>
+                    <input type="text" class="form-control" id="id_name" name="name"
+                           value="" required
+                           pattern="^\S+$"
+                           title="Whitespace is not allowed">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Deploy</button>
+                <a href="{% url 'module-list' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        {% endif %}
     </div>
 {% endblock %}
