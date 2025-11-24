@@ -40,12 +40,6 @@ Excerpt:
 
 [See full TODO list](docs/TODO.md) for details.
 
-## Code Formatting
-
-* To indent and beautify HTML templates:
-```bash
-djhtml template.html
-```
 
 ## Development
 
