@@ -14,6 +14,7 @@ class DockerHost(models.Model):
     )
     active = models.BooleanField(default=False)
     pangolin_features = models.BooleanField(default=False)
+    default_domain = models.URLField(max_length=200, null=True)
 
     class Meta:
         verbose_name = "Docker Host"

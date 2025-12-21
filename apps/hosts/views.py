@@ -53,6 +53,7 @@ class HostView(LoginRequiredMixin, UserPassesTestMixin, View):
         elif action == "save":
             docker_host.base_url = request.POST.get("base_url", "")
             docker_host.pangolin_features = "pangolin_features" in request.POST
+            docker_host.default_domain = request.POST.get("resource_domain", "")
             docker_host.save()
 
             if docker_host.test_config():

@@ -1,5 +1,6 @@
 import json
 import threading
+from cProfile import label
 
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect, render
@@ -7,7 +8,7 @@ from django.views import View
 
 from apps.catalog.models import Instance, Module
 from apps.catalog.views import user_can_deploy
-from core.docker.deploy import deploy_instance, get_random_free_port
+from core.docker.deploy import deploy_instance, get_random_free_port, set_pangolin_labels
 
 
 class DeployView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -49,6 +50,7 @@ class DeployView(LoginRequiredMixin, UserPassesTestMixin, View):
             environment=module.default_env,
             default_restart_policy=module.default_restart_policy,
         )
+        set_pangolin_labels(instance.id, False)
 
         threading.Thread(
             target=deploy_instance, args=(instance.id,), daemon=True

@@ -93,6 +93,23 @@
                 </div>
             </div>
 
+        <!-- Section: Default Domain -->
+            <div class="mb-4">
+                <label for="id_resource_domain" class="form-label">Resource Domain</label>
+                <input
+                    type="text"
+                    class="form-control"
+                    id="id_resource_domain"
+                    name="resource_domain"
+                    value="{{ docker_host.default_domain }}"
+                    placeholder="e.g. example.com"
+                    required
+                >
+                <div class="form-text">
+                    The Docker daemon must be reachable at this address.
+                </div>
+            </div>
+
         <!-- Actions -->
             <div class="d-flex gap-2">
                 <button type="submit" name="action" value="save" class="btn btn-primary">

@@ -48,7 +48,7 @@ To run **Heimwerk** locally, you need a development Docker server with its API e
 ### 1. Stop the running Docker service
 Before exposing the Docker API, stop the default Docker daemon:
 ```bash
-sudo systemctl stop docker
+sudo systemctl stop docker && sudo systemctl stop docker.socket
 ````
 
 ### 2. Start Docker with TCP API enabled

@@ -124,6 +124,12 @@ class Instance(models.Model):
         blank=True, null=True, help_text="Docker API output or metadata"
     )
 
+    pangolin_name = models.CharField(max_length=100, blank=True, null=True)
+    pangolin_resource_domain = models.URLField(max_length=200, blank=True, null=True)
+    pangolin_protocol = models.CharField(max_length=10, blank=True, null=True)
+    pangolin_target_protocol = models.CharField(max_length=10, blank=True, null=True)
+    pangolin_port = models.PositiveIntegerField(blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

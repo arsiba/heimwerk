@@ -1,5 +1,6 @@
 import docker
 from docker import DockerClient
+from docker.models.containers import Container
 
 _client = None
 
@@ -63,8 +64,25 @@ def pull_image(client: DockerClient, image_name: str):
     client.images.pull(image_name)
 
 
-# falls du es importierst
-from docker.models.containers import Container
+def build_labels(
+    pangolin_name: str,
+    pangolin_resource_domain: str,
+    pangolin_protocol: str,
+    pangolin_target_protocol: str,
+    pangolin_port: int,
+) -> dict[str, str]:
+
+    resource_key = pangolin_name
+
+    return {
+        f"pangolin.public-resources.{resource_key}.name": pangolin_name,
+        f"pangolin.public-resources.{resource_key}.protocol": pangolin_protocol,
+        f"pangolin.public-resources.{resource_key}.full-domain": pangolin_resource_domain,
+
+        f"pangolin.public-resources.{resource_key}.targets[0].method": pangolin_target_protocol,
+        f"pangolin.public-resources.{resource_key}.targets[0].port": str(pangolin_port),
+    }
+
 
 
 def start_container(
@@ -75,6 +93,7 @@ def start_container(
     environment: dict[str, str] | None = None,
     detach: bool = True,
     restart_policy: dict | None = None,
+    labels: dict[str, str] | None = None,
 ) -> Container:
     """
     Start a Docker container.
@@ -98,6 +117,7 @@ def start_container(
         environment=environment,
         detach=detach,
         restart_policy=restart_policy,
+        labels=labels
     )
     return container
 
