@@ -10,7 +10,8 @@ from core.docker.client import (
     pull_image,
     start_container,
     stop_container,
-    unstop_container, build_labels,
+    unstop_container,
+    build_labels,
 )
 
 # Logging konfigurieren (kann an Django-Logging angepasst werden)
@@ -86,7 +87,17 @@ def deploy_instance(instance_id):
 
         ports = {f"{instance.container_port}/tcp": instance.host_port}
         restart_policy = {"Name": instance.default_restart_policy}
-        labels = build_labels(instance.pangolin_name, instance.pangolin_resource_domain, instance.pangolin_protocol, instance.pangolin_target_protocol, instance.pangolin_port) if host.pangolin_features else None
+        labels = (
+            build_labels(
+                instance.pangolin_name,
+                instance.pangolin_resource_domain,
+                instance.pangolin_protocol,
+                instance.pangolin_target_protocol,
+                instance.pangolin_port,
+            )
+            if host.pangolin_features
+            else None
+        )
         logger.info(labels)
 
         container = start_container(
@@ -97,7 +108,7 @@ def deploy_instance(instance_id):
             instance.environment,
             True,
             restart_policy,
-            labels
+            labels,
         )
         logger.info(f"Container '{instance.name}' started.")
     except Exception as e:
@@ -182,15 +193,14 @@ def set_pangolin_labels(instance_id, container_secured_backend):
     instance = Instance.objects.get(id=instance_id)
     host = DockerHost.objects.get(active=True)
     pangolin_name = instance.name.replace(" ", "_")
-    pangolin_resource_domain = f"{instance.owner.username.replace(" ", "_")}-{instance.module.name.replace(" ", "_")}-{random.randint(1000, 9999)}.{host.default_domain}"
+    pangolin_resource_domain = f"{instance.owner.username.replace(' ', '_')}-{instance.module.name.replace(' ', '_')}-{random.randint(1000, 9999)}.{host.default_domain}"
     pangolin_protocol = "https"
     pangolin_target_protocol = "https" if container_secured_backend else "http"
     pangolin_port = instance.host_port
 
-    instance.pangolin_name=pangolin_name
-    instance.pangolin_resource_domain=pangolin_resource_domain
-    instance.pangolin_protocol=pangolin_protocol
-    instance.pangolin_target_protocol=pangolin_target_protocol
-    instance.pangolin_port=pangolin_port
+    instance.pangolin_name = pangolin_name
+    instance.pangolin_resource_domain = pangolin_resource_domain
+    instance.pangolin_protocol = pangolin_protocol
+    instance.pangolin_target_protocol = pangolin_target_protocol
+    instance.pangolin_port = pangolin_port
     instance.save()
-
