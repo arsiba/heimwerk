@@ -1,9 +1,5 @@
-import unittest
-
 from django.contrib.auth.models import Group, User, AnonymousUser
 from django.test import TestCase, RequestFactory
-from poetry.console.commands import self
-
 from apps.catalog.context_processors import global_user_context, global_host_context
 from apps.hosts.models import DockerHost
 
