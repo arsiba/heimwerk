@@ -36,6 +36,6 @@ def global_user_context(request):
     }
 
 
-def global_host_context():
+def global_host_context(self):
     active = DockerHost.objects.filter(active=True).first()
     return {"active_host": active}
