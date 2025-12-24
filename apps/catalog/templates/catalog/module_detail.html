@@ -9,13 +9,23 @@
       <!-- Module Card -->
         <div class="card border mb-4 shadow-sm">
           <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-              <h3 class="card-title fw-bold mb-0">{{ object.name|default:"Unnamed Module" }}</h3>
-              <span class="badge bg-secondary">{{ object.id }}</span>
+            <div class="d-flex align-items-center mb-4">
+              {% if object.module_image %}
+                <div class="me-3" style="flex-shrink: 0;">
+                  <img src="{{ object.module_image.url }}" alt="Logo" class="img-fluid" style="width: 80px; height: 80px; object-fit: contain;">
+                </div>
+              {% endif %}
+
+              <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-start">
+                  <h3 class="card-title fw-bold mb-0">{{ object.name|default:"Unnamed Module" }}</h3>
+                  <span class="badge bg-secondary">{{ object.id }}</span>
+                </div>
+                <p class="card-text text-secondary mt-1 mb-0">
+                  {{ object.description|default:"No description available." }}
+                </p>
+              </div>
             </div>
-            <p class="card-text text-secondary mb-3">
-              {{ object.description|default:"No description available." }}
-            </p>
 
           <!-- Docker Info -->
             <ul class="list-unstyled small mb-3">

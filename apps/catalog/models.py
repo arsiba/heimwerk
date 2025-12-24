@@ -46,6 +46,7 @@ class Module(models.Model):
         choices=restart_choices,
         help_text="Default restart policy, e.g., {'Name': 'always'}",
     )
+    module_image = models.ImageField(upload_to="images/", blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
