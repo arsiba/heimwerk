@@ -159,3 +159,9 @@ class Instance(models.Model):
         from django.urls import reverse
 
         return reverse("instance-detail", args=[self.slug])
+
+    def get_local_resource_url(self):
+        return f"127.0.0.1:{self.host_port}"
+
+    def get_external_resource_url(self):
+        return self.pangolin_resource_domain
