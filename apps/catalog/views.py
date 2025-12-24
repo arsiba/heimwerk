@@ -27,13 +27,6 @@ def index(request):
     return render(request, "index.html", context=context)
 
 
-class ModuleListView(generic.ListView):
-    """Generic class-based view for a list of modules."""
-
-    model = Module
-    paginate_by = 10
-
-
 class ModuleDetailView(generic.DetailView):
     """Generic class-based detail view for a module."""
 

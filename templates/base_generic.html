@@ -30,12 +30,7 @@
           <ul class="nav flex-column">
             <li class="nav-item">
               <a class="nav-link text-white px-4 py-2" href="{% url 'index' %}">
-                Dashboard
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link text-white px-4 py-2" href="{% url 'module-list' %}">
-                Services
+                Catalog
               </a>
             </li>
             {% if is_admin or is_authenticated and user_instances_count > 0 %}

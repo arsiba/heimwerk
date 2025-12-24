@@ -4,7 +4,6 @@ from . import views
 
 urlpatterns = [
     path("", views.index, name="index"),
-    path("module", views.ModuleListView.as_view(), name="module-list"),
     path("module/new", views.ModuleCreateView.as_view(), name="module-create"),
     path(
         "module/update/<slug:slug>",
