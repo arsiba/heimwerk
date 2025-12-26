@@ -8,7 +8,11 @@ from django.views import View
 
 from apps.catalog.models import Instance, Module
 from apps.catalog.views import user_can_deploy
-from core.docker.deploy import deploy_instance, get_random_free_port, set_pangolin_labels
+from core.docker.deploy import (
+    deploy_instance,
+    get_random_free_port,
+    set_pangolin_labels,
+)
 
 
 class DeployView(LoginRequiredMixin, UserPassesTestMixin, View):

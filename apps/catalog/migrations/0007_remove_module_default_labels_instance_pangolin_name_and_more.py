@@ -6,37 +6,37 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('catalog', '0006_module_default_labels'),
+        ("catalog", "0006_module_default_labels"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='module',
-            name='default_labels',
+            model_name="module",
+            name="default_labels",
         ),
         migrations.AddField(
-            model_name='instance',
-            name='pangolin_name',
+            model_name="instance",
+            name="pangolin_name",
             field=models.CharField(blank=True, max_length=100, null=True),
         ),
         migrations.AddField(
-            model_name='instance',
-            name='pangolin_port',
+            model_name="instance",
+            name="pangolin_port",
             field=models.PositiveIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='instance',
-            name='pangolin_protocol',
+            model_name="instance",
+            name="pangolin_protocol",
             field=models.CharField(blank=True, max_length=10, null=True),
         ),
         migrations.AddField(
-            model_name='instance',
-            name='pangolin_resource_domain',
+            model_name="instance",
+            name="pangolin_resource_domain",
             field=models.URLField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='instance',
-            name='pangolin_target_protocol',
+            model_name="instance",
+            name="pangolin_target_protocol",
             field=models.CharField(blank=True, max_length=10, null=True),
         ),
     ]

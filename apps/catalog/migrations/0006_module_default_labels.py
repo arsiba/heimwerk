@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('catalog', '0005_alter_instance_status'),
+        ("catalog", "0005_alter_instance_status"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='module',
-            name='default_labels',
-            field=models.JSONField(blank=True, help_text='Default labels, e.g. used for pangolin features', null=True),
+            model_name="module",
+            name="default_labels",
+            field=models.JSONField(
+                blank=True,
+                help_text="Default labels, e.g. used for pangolin features",
+                null=True,
+            ),
         ),
     ]

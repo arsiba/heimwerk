@@ -78,11 +78,9 @@ def build_labels(
         f"pangolin.public-resources.{resource_key}.name": pangolin_name,
         f"pangolin.public-resources.{resource_key}.protocol": pangolin_protocol,
         f"pangolin.public-resources.{resource_key}.full-domain": pangolin_resource_domain,
-
         f"pangolin.public-resources.{resource_key}.targets[0].method": pangolin_target_protocol,
         f"pangolin.public-resources.{resource_key}.targets[0].port": str(pangolin_port),
     }
-
 
 
 def start_container(
@@ -117,7 +115,7 @@ def start_container(
         environment=environment,
         detach=detach,
         restart_policy=restart_policy,
-        labels=labels
+        labels=labels,
     )
     return container
 
@@ -136,3 +134,7 @@ def destroy_container(client: DockerClient, container_name: str):
 
 def container_stats(client: DockerClient, container_name: str):
     return client.api.stats(container_name, decode=True, stream=False)
+
+
+def container_logs(client: DockerClient, container_name: str):
+    return client.api.logs(container_name, stdout=True, stderr=True, stream=False)

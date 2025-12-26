@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hosts', '0002_alter_dockerhost_active'),
+        ("hosts", "0002_alter_dockerhost_active"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='dockerhost',
-            name='default_domain',
+            model_name="dockerhost",
+            name="default_domain",
             field=models.URLField(null=True),
         ),
     ]
