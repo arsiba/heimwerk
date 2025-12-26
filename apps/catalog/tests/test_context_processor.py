@@ -46,9 +46,9 @@ class ContextProcessorTestCase(TestCase):
         self.assertEqual(result["user_instances_count"], 0)
 
     def test_global_host_context(self):
-        result = global_host_context()
+        result = global_host_context(self)
         self.assertIsNone(result["active_host"])
 
         host = DockerHost.objects.create(name="Server1", active=True)
-        result = global_host_context()
+        result = global_host_context(self)
         self.assertEqual(result["active_host"], host)
