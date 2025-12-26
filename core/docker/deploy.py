@@ -2,7 +2,7 @@ import logging
 import random
 import time
 
-from apps.catalog.models import Instance
+from apps.deployments.models import Instance
 from apps.hosts.models import DockerHost
 from core.docker.client import (
     destroy_container,

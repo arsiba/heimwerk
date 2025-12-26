@@ -1,12 +1,7 @@
-from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.shortcuts import get_object_or_404, redirect, render
-from django.views import View, generic
-from django.views.decorators.http import require_POST
-
-from core.docker.deploy import destroy_instance, pause_instance, unpause_instance
-
-from .models import Instance, Module
+from django.shortcuts import render
+from django.views import generic
+from .models import Module
 from django.views.generic.edit import CreateView
 from django.views.generic.edit import UpdateView
 
@@ -51,70 +46,12 @@ class ModuleDetailView(generic.DetailView):
         return context
 
 
-class InstanceListView(generic.ListView):
-    """Generic class-based view for a list of instances."""
-
-    model = Instance
-    paginate_by = 10
-
-    def get_context_data(self, **kwargs):
-        user = self.request.user
-        owned_instances = Instance.objects.filter(owner=user)
-
-        if user.is_superuser or user.groups.filter(name="editor").exists():
-            owned_instances = Instance.objects.all()
-        new_context = {
-            "owned_Instances": owned_instances,
-        }
-        return new_context
-
-
 def user_can_deploy(user):
     return user.is_superuser or user.groups.filter(name__in=["user", "editor"]).exists()
 
 
 def user_can_edit(user):
     return user.is_superuser or user.groups.filter(name="editor").exists()
-
-
-class InstanceDetailView(LoginRequiredMixin, UserPassesTestMixin, generic.DetailView):
-    """Generic class-based detail view for a instance."""
-
-    def test_func(self):
-        user = self.request.user
-        return user.is_superuser or user == self.get_object().owner
-
-    model = Instance
-    slug_field = "slug"
-    slug_url_kwarg = "slug"
-
-
-@require_POST
-def instance_action_view(request, instance_id):
-    """
-    Handle pause or destroy actions for an instance.
-    The action type comes from a POST parameter: 'action' = 'pause' | 'destroy'
-    """
-    instance = get_object_or_404(Instance, id=instance_id)
-    action = request.POST.get("action")
-
-    try:
-        if action == "pause":
-            pause_instance(instance.id)
-            messages.success(request, f"Instance '{instance.name}' paused.")
-        elif action == "unpause":
-            unpause_instance(instance.id)
-            messages.success(request, f"Instance '{instance.name}' unpaused.")
-        elif action == "destroy":
-            destroy_instance(instance.id)
-            messages.success(request, f"Instance '{instance.name}' destroyed.")
-            return redirect("index")
-        else:
-            messages.error(request, "Unknown action.")
-    except Exception as e:
-        messages.error(request, f"Failed to perform action '{action}': {e}")
-
-    return redirect("instance-detail", instance.slug)
 
 
 class ModuleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):

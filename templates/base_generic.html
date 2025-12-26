@@ -35,7 +35,7 @@
             </li>
             {% if is_admin or is_authenticated and user_instances_count > 0 %}
               <li class="nav-item">
-                <a class="nav-link text-white px-4 py-2" href="{% url 'instance-list' %}">
+                <a class="nav-link text-white px-4 py-2" href="{% url 'deployments:instance-list' %}">
                   Deployments
                 </a>
               </li>

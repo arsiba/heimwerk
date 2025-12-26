@@ -1,6 +1,5 @@
 # main/context_processors.py
-
-from .models import Instance
+from ..deployments.models import Instance
 from ..hosts.models import DockerHost
 
 

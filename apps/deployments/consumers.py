@@ -3,7 +3,7 @@ import threading
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 
-from apps.catalog.models import Instance
+from apps.deployments.models import Instance
 from core.docker.client import get_docker_client
 
 

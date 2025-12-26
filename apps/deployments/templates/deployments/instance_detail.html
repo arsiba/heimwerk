@@ -84,7 +84,7 @@
 
                 <!-- Pause button -->
 
-                <form action="{% url 'instance-action' instance.id %}" method="post" class="flex-fill">
+                <form action="{% url 'deployments:instance-action' instance.id %}" method="post" class="flex-fill">
                   {% csrf_token %}
                   {% if instance.status == 'running' %}
                     <input type="hidden" name="action" value="pause">
@@ -97,7 +97,7 @@
 
 
                 <!-- Delete button -->
-                <form action="{% url 'instance-action' instance.id %}" method="post" class="flex-fill">
+                <form action="{% url 'deployments:instance-action' instance.id %}" method="post" class="flex-fill">
                   {% csrf_token %}
                   <input type="hidden" name="action" value="destroy">
                   <button type="submit" class="btn btn-danger btn-sm w-100">Delete</button>
