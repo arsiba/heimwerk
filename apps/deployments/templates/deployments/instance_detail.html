@@ -51,15 +51,60 @@
 
             <p class="text-muted mb-1">
               <strong>Status:</strong>
-              <span class="badge
-                           {% if instance.status == 'running' %}bg-success
-                           {% elif instance.status == 'failed'  or instance.status == 'exited'  %}bg-danger
-                           {% elif instance.status == 'destroyed' %}bg-dark
-                           {% elif instance.status == 'paused' %}bg-warning text-dark
-                           {% else %}bg-secondary{% endif %}">
+              <span id="badge-{{ instance.id }}" class="badge
+                                                        {% if instance.status == 'running' %}bg-success
+                                                        {% elif instance.status == 'failed' or instance.status == 'exited' %}bg-danger
+                                                        {% elif instance.status == 'destroyed' %}bg-dark
+                                                        {% elif instance.status == 'paused' %}bg-warning text-dark
+                                                        {% else %}bg-secondary{% endif %}">
                 {{ instance.status }}
               </span>
             </p>
+
+            <script>
+              (function() {
+                const instanceId = "{{ instance.id }}";
+                const badge = document.getElementById('badge-{{ instance.id }}');
+                const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+                const socketUrl = protocol + window.location.host + '/ws/status/' + instanceId + '/';
+                let socket = null;
+
+                function connect() {
+                        // Falls bereits eine Verbindung besteht, nichts tun
+                  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+                    return;
+                  }
+
+                  socket = new WebSocket(socketUrl);
+
+                  socket.onmessage = function(e) {
+                    const newStatus = e.data.trim().toLowerCase();
+                    badge.textContent = newStatus;
+                    badge.className = 'badge';
+
+                    if (newStatus === 'running') badge.classList.add('bg-success');
+                    else if (['failed', 'exited'].includes(newStatus)) badge.classList.add('bg-danger');
+                    else if (newStatus === 'paused') badge.classList.add('bg-warning', 'text-dark');
+                    else if (newStatus === 'destroyed') badge.classList.add('bg-dark');
+                    else badge.classList.add('bg-secondary');
+                  };
+
+                  socket.onclose = function() {
+                    console.log('Socket closed for ' + instanceId);
+                  };
+                }
+
+                    // 1. Sofort beim Laden verbinden
+                connect();
+
+                    // 2. Re-connect wenn der User den Tab wieder öffnet
+                document.addEventListener('visibilitychange', function() {
+                  if (document.visibilityState === 'visible') {
+                    connect();
+                  }
+                });
+              })();
+            </script>
 
             {% if instance.docker_output %}
               <div class="border-top pt-3">

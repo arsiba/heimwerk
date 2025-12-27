@@ -16,7 +16,7 @@ class DockerLogConsumer(AsyncWebsocketConsumer):
             return
 
         self.instance_id = self.scope["url_route"]["kwargs"]["pk"]
-        self.container_name = await self.get_container_id(self.instance_id)
+        self.container_name = await get_container_id(self, self.instance_id)
 
         if not self.container_name:
             await self.close()
@@ -53,15 +53,57 @@ class DockerLogConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             pass
 
-    @database_sync_to_async
-    def get_container_id(self, pk):
+
+class InstanceStatusConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        user = self.scope["user"]
+        if not user.is_authenticated:
+            await self.close()
+            return
+
+        self.instance_id = self.scope["url_route"]["kwargs"]["pk"]
+        self.container_name = await get_container_id(self, self.instance_id)
+
+        if not self.container_name:
+            await self.close()
+            return
+
+        await self.accept()
+        self.keep_running = True
+
+        self.loop = asyncio.get_running_loop()
+        self.thread = threading.Thread(target=self._stream_status_thread)
+        self.thread.start()
+
+    async def disconnect(self, close_code):
+        pass
+
+    def _stream_status_thread(self):
+        """runs in background and streams the container status"""
+        client = get_docker_client()
+        status_cache = None
         try:
+            container = client.containers.get(self.container_name)
+            while self.keep_running:
+                status = container.status
+                if status_cache != status:
+                    asyncio.run_coroutine_threadsafe(
+                        self.send(text_data=status), self.loop
+                    )
+                    status_cache = status
+        except Exception as e:
+            pass
 
-            if self.scope["user"].is_superuser:
-                instance = Instance.objects.get(pk=pk)
-            else:
-                instance = Instance.objects.get(pk=pk, owner=self.scope["user"])
 
-            return instance.container_id or instance.name
-        except Instance.DoesNotExist:
-            return None
+@database_sync_to_async
+def get_container_id(self, pk):
+    try:
+
+        if self.scope["user"].is_superuser:
+            instance = Instance.objects.get(pk=pk)
+        else:
+            instance = Instance.objects.get(pk=pk, owner=self.scope["user"])
+
+        return instance.container_id or instance.name
+    except Instance.DoesNotExist:
+        return None
