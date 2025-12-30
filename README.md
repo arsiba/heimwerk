@@ -9,37 +9,119 @@
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=arsiba_heimwerk&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=arsiba_heimwerk)
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=arsiba_heimwerk&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=arsiba_heimwerk)
 
-**Heimwerk** is a Platform for deploying Docker containers. Users can select from a catalog of prebuilt modules, view them, and deploy them with a single click. The system simplifies service deployment in a homelab and enables standardized deployments.
+**Heimwerk** is a platform for deploying Docker containers. Users can select from a catalog of prebuilt modules, view them, and deploy them with a single click. The system simplifies service deployment in a homelab and enables standardized deployments.
 
 The recommended use case is in combination with **Pangolin**, to automatically make deployed services accessible to the user, including subdomain, network rules, and access control.
 
+---
+
 ## Features
 
-* Catalog management for modules
-* Display modules with description and metadata
-* Self-service deployment with one click
-* Recommended integration with Pangolin for automatic deployment and network configuration
-* Easily extendable with new modules
+* **Catalog Management**: Maintain a catalog of prebuilt Docker modules.
+* **One-Click Deployment**: Self-service deployment for users.
+* **Pangolin Integration**: Automatic network configuration and access control (recommended).
+* **Extensible**: Easily add new modules to the catalog.
+* **Real-time Monitoring**: (In progress) Statistics for deployed instances via WebSockets.
 
-## Target Audience
+## Tech Stack
 
-* Homelab users who want to deploy services quickly and easily
-* Users who want to test self-service deployments with standardized modules
+- **Language:** Python 3.10+
+- **Framework:** Django 5.2.x, Django Channels
+- **Package Manager:** pip
+- **Database:** SQLite (default for development)
+- **Containerization:** Docker (via Docker SDK for Python)
+- **Web Server:** Daphne (for ASGI/WebSocket support)
 
-## Development TODOs
+## Requirements
 
-The current development tasks are documented in [`docs/TODO.md`](docs/TODO.md).  
+- Python 3.10 or higher
+- Docker installed and running
+- Access to Docker API (see [Development](#development) section)
 
-Excerpt:
+## Setup & Installation
 
-* **Deployment Views** – Add views for managing `Instance` deployments with proper permission checks  
-* **Deployment Forms** – Build forms to deploy instances based on modules (machine/host selection, domain/subdomain)  
-* **Backend** – Implement basic deploy functionality, capture outputs and status, support destroying instances  
-* **Settings & Secure Storage** – Store hosts, credentials, configs, and state securely  
-* **Tests** – Unit and integration tests for views, forms, backend, and settings
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/arsiba/heimwerk.git
+   cd heimwerk
+   ```
 
-[See full TODO list](docs/TODO.md) for details.
+2. **Create and activate a virtual environment:**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
 
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Apply migrations:**
+   ```bash
+   python manage.py migrate
+   ```
+
+5. **Create a superuser:**
+   ```bash
+   python manage.py createsuperuser
+   ```
+
+## Running the Application
+
+To start the development server with ASGI support:
+
+```bash
+python manage.py runserver
+````
+
+The application will be available at `http://127.0.0.1:8000`.
+
+## Scripts & Management Commands
+
+- `python manage.py runserver`: Start the development server.
+- `python manage.py migrate`: Apply database migrations.
+- `python manage.py createsuperuser`: Create an administrative user.
+- `python manage.py test`: Run the test suite.
+- `python manage.py collectstatic`: Collect static files for production.
+- `python manage.py shell`: Open the Django interactive shell.
+
+## Environment Variables
+
+Currently, the project uses default Django settings. Future updates may include:
+
+- `DEBUG`: Set to `False` in production.
+- `SECRET_KEY`: Django secret key.
+- `ALLOWED_HOSTS`: List of hosts allowed to access the site.
+- **TODO**: Define app-specific environment variables for Docker host configurations and secure storage.
+
+## Project Structure
+
+```text
+heimwerk/
+├── apps/               # Django applications
+│   ├── catalog/        # Module catalog management
+│   ├── deployments/    # Instance and deployment logic
+│   ├── hosts/          # Docker host management
+│   └── users/          # User management and signals
+├── config/             # Project configuration (settings, URLs, ASGI/WSGI)
+├── core/               # Core logic and utilities
+│   ├── docker/         # Docker SDK wrappers and deployment logic
+│   └── utils/          # Common utilities
+├── templates/          # Global HTML templates
+├── docs/               # Documentation (TODOs, etc.)
+├── manage.py           # Django management script
+├── requirements.txt    # Python dependencies
+└── pyproject.toml      # Build and tool configuration (Black, Isort)
+````
+
+## Testing
+
+Run tests using the standard Django test runner:
+
+```bash
+python manage.py test
+````
 
 ## Development
 
@@ -57,7 +139,7 @@ Start the Docker daemon manually, exposing both the TCP port (for Heimwerk) and 
 
 ```bash
 sudo dockerd -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock
-```
+````
 
 * `tcp://0.0.0.0:2375` — allows connections over TCP on all interfaces.
 * `unix:///var/run/docker.sock` — keeps local Docker CLI commands functional.
@@ -68,7 +150,7 @@ You can test the TCP API with:
 
 ```bash
 curl http://localhost:2375/version
-```
+````
 
 You should see JSON output containing Docker version information.
 
@@ -80,7 +162,7 @@ Exposing Docker over TCP **without TLS** is insecure and allows full control of 
 
 ```bash
 sudo dockerd -H tcp://127.0.0.1:2375 -H unix:///var/run/docker.sock
-```
+````
 
 * Or configure TLS for remote access in production environments.
 
@@ -90,8 +172,12 @@ When finished, restart the standard Docker service:
 
 ```bash
 sudo systemctl start docker
-```
+````
 
 This setup allows Heimwerk to communicate with Docker for deploying and managing containers in your local dev environment.
+
+## License
+
+**TODO**: Specify the license for this project.
 
 
