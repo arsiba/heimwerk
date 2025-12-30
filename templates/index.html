@@ -5,31 +5,12 @@
 {% endblock %}
 
 {% block content %}
-<!-- Stats Bar -->
-  <div class="bg-white border-bottom mb-4">
-    <div class="container">
-      <div class="row py-3 text-center">
-        <div class="col-md-4">
-          <div class="fw-bold fs-4">{{ modules |length }}</div>
-          <small class="text-muted">Available Modules</small>
-        </div>
-        <div class="col-md-4">
-          <div class="fw-bold fs-4">{{ user_instances_count }}</div>
-          <small class="text-muted">Your Deployments</small>
-        </div>
-        <div class="col-md-4">
-          <div class="fw-bold fs-4">{{ all_instances_count }}</div>
-          <small class="text-muted">All Deployments</small>
-        </div>
-      </div>
-    </div>
-  </div>
 
 <!-- Modules Section -->
   <div class="container py-2" id="modules">
 
     {% if modules %}
-      <div class="row g-4">
+      <div class="row g-4 mt-2">
         {% for module in modules %}
           <div class="col-md-6 col-xl-4">
             <div class="card h-100 border">
@@ -53,7 +34,7 @@
                 <div class="border-top pt-3 mt-auto">
                   <div class="d-flex gap-2">
                     {% if user.is_authenticated and can_deploy %}
-                      <a href="{% url 'deployments:deploy-instance' slug=module.slug %}" class="btn btn-primary btn-sm flex-fill">Deploy</a>
+                      <a href="{% url 'deployments:deploy-instance' slug=module.slug %}" class="btn btn-warning btn-sm flex-fill">Deploy</a>
                     {% endif %}
                     <a href="{{ module.get_absolute_url }}" class="btn btn-outline-secondary btn-sm">Details</a>
                   </div>
@@ -73,7 +54,7 @@
 
     {% if user.is_authenticated and can_deploy %}
       <div class="fixed-bottom p-4 text-end" style="z-index: 1030; pointer-events: none;">
-        <a href="{% url 'module-create' %}" class="btn btn-primary shadow-lg px-4 py-2" style="pointer-events: auto;">
+        <a href="{% url 'module-create' %}" class="btn btn-warning shadow-lg px-4 py-2" style="pointer-events: auto;">
           <i class="bi bi-plus-lg"></i> Add Module
         </a>
       </div>

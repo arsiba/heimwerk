@@ -58,7 +58,7 @@
 
             {% if user.is_authenticated and can_deploy %}
               <div class="d-flex mt-3">
-                <a href="{% url 'module-update' slug=module.slug %}" class="btn btn-primary btn-sm flex-fill">Edit</a>
+                <a href="{% url 'module-update' slug=module.slug %}" class="btn btn-warning btn-sm flex-fill">Edit</a>
               </div>
               <div class="mt-3 d-flex gap-2">
                 <a href="{% url 'deployments:deploy-instance' slug=module.slug %}" class="btn btn-success btn-sm flex-fill">Deploy</a>
