@@ -12,6 +12,7 @@ from core.docker.client import (
     stop_container,
     unstop_container,
     build_labels,
+    container_stats,
 )
 
 # Logging konfigurieren (kann an Django-Logging angepasst werden)
@@ -204,3 +205,9 @@ def set_pangolin_labels(instance_id, container_secured_backend):
     instance.pangolin_target_protocol = pangolin_target_protocol
     instance.pangolin_port = pangolin_port
     instance.save()
+
+
+def get_instance_stats(instance_id):
+    instance = Instance.objects.get(id=instance_id)
+    client = get_docker_client()
+    return container_stats(client, instance.name)

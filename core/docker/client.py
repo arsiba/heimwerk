@@ -133,7 +133,7 @@ def destroy_container(client: DockerClient, container_name: str):
 
 
 def container_stats(client: DockerClient, container_name: str):
-    return client.api.stats(container_name, decode=True, stream=False)
+    return client.api.stats(container_name, decode=True, stream=True)
 
 
 def container_logs(client: DockerClient, container_name: str):

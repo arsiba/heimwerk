@@ -5,6 +5,7 @@ from channels.db import database_sync_to_async
 
 from apps.deployments.models import Instance
 from core.docker.client import get_docker_client
+from core.docker.deploy import get_instance_stats
 
 
 class DockerLogConsumer(AsyncWebsocketConsumer):
@@ -91,6 +92,47 @@ class InstanceStatusConsumer(AsyncWebsocketConsumer):
                         self.send(text_data=status), self.loop
                     )
                     status_cache = status
+        except Exception as e:
+            pass
+
+
+class InstanceStatsConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        user = self.scope["user"]
+        if not user.is_authenticated:
+            await self.close()
+            return
+
+        self.instance_id = self.scope["url_route"]["kwargs"]["pk"]
+        self.container_name = await get_container_id(self, self.instance_id)
+
+        if not self.container_name:
+            await self.close()
+            return
+
+        await self.accept()
+        self.keep_running = True
+
+        self.loop = asyncio.get_running_loop()
+        self.thread = threading.Thread(target=self._stream_stats_thread)
+        self.thread.start()
+
+    async def disconnect(self, close_code):
+        pass
+
+    def _stream_stats_thread(self):
+        """runs in background and streams the container stats"""
+        client = get_docker_client()
+        try:
+            container = client.containers.get(self.container_name)
+            stats_stream = container.stats(
+                stream=True,
+            )
+
+            for stat in stats_stream:
+                asyncio.run_coroutine_threadsafe(
+                    self.send(text_data=stat.decode()), self.loop
+                )
         except Exception as e:
             pass
 

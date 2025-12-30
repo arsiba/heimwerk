@@ -20,4 +20,5 @@ urlpatterns = [
 websocket_urlpatterns = [
     re_path(r"ws/logs/(?P<pk>[^/]+)/$", consumers.DockerLogConsumer.as_asgi()),
     re_path(r"ws/status/(?P<pk>[^/]+)/$", consumers.InstanceStatusConsumer.as_asgi()),
+    re_path(r"ws/stats/(?P<pk>[^/]+)/$", consumers.InstanceStatsConsumer.as_asgi()),
 ]

@@ -17,6 +17,94 @@
               Module: <strong>{{ instance.module.name }}</strong>
             </p>
 
+          <!-- Container Statistics -->
+            <div>
+              <canvas id="memChart"></canvas>
+            </div>
+
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+            <script>
+              (function() {
+                const instanceId = "{{ instance.id }}";
+                const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+                const socketUrl = protocol + window.location.host + '/ws/stats/' + instanceId + '/';
+
+                const ctx = document.getElementById('memChart').getContext('2d');
+                const maxDataPoints = 200;
+
+                const memChart = new Chart(ctx, {
+                  type: 'line',
+                  data: {
+                    labels: [],
+                    datasets: [{
+                      label: 'Memory Usage (MiB)',
+                      data: [],
+                      borderColor: 'rgba(54, 162, 235, 1)',
+                      backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                      fill: true,
+                      tension: 0.4,
+                      borderWidth: 2
+                    }]
+                  },
+                  options: {
+                    responsive: true,
+                    scales: {
+                      y: {
+                        beginAtZero: false,
+                        title: { display: true, text: 'MiB' }
+                      },
+                      x: {
+                        title: { display: true, text: 'Time' }
+                      }
+                    },
+                    animation: false
+                  }
+                });
+
+                let socket = null;
+
+                function connect() {
+                  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) return;
+
+                  socket = new WebSocket(socketUrl);
+
+                  socket.onmessage = function(e) {
+                    const stats = JSON.parse(e.data);
+
+                    const usage = stats.memory_stats.usage || 0;
+                    const inactiveFile = (stats.memory_stats.stats && stats.memory_stats.stats.inactive_file) ? stats.memory_stats.stats.inactive_file : 0;
+
+                    const usedBytes = usage - inactiveFile;
+                    const usedMiB = (usedBytes / 1024 / 1024).toFixed(2);
+
+                    const now = new Date().toLocaleTimeString();
+
+                    addData(memChart, now, usedMiB);
+                  };
+
+                  socket.onclose = function() {
+                    console.log('Stats-Socket closed. Retrying in 5s...');
+                    setTimeout(connect, 5000);
+                  };
+                }
+
+                function addData(chart, label, data) {
+                  chart.data.labels.push(label);
+                  chart.data.datasets[0].data.push(data);
+
+                  if (chart.data.labels.length > maxDataPoints) {
+                    chart.data.labels.shift();
+                    chart.data.datasets[0].data.shift();
+                  }
+                  chart.update('none');
+                }
+
+                connect();
+              })();
+            </script>
+
+
             <!-- Docker Info -->
             <ul class="list-unstyled small mb-3">
               <li><strong>Image:</strong> {{ instance.image_name|default:"N/A" }}</li>
@@ -70,7 +158,6 @@
                 let socket = null;
 
                 function connect() {
-                        // Falls bereits eine Verbindung besteht, nichts tun
                   if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
                     return;
                   }
@@ -94,10 +181,8 @@
                   };
                 }
 
-                    // 1. Sofort beim Laden verbinden
                 connect();
 
-                    // 2. Re-connect wenn der User den Tab wieder öffnet
                 document.addEventListener('visibilitychange', function() {
                   if (document.visibilityState === 'visible') {
                     connect();
