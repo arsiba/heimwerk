@@ -9,24 +9,16 @@
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=arsiba_heimwerk&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=arsiba_heimwerk)
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=arsiba_heimwerk&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=arsiba_heimwerk)
 
-**Heimwerk** is a platform for deploying Docker containers. Users can select from a catalog of prebuilt modules, view them, and deploy them with a single click. The system simplifies service deployment in a homelab and enables standardized deployments.
+**Heimwerk** is a platform for deploying Docker containers, designed to empower users by providing easy, self-service access to homelab resources. It enables administrators to share server capabilities securely and effortlessly, allowing users to deploy services from a prebuilt catalog with a single click while maintaining a standardized and controlled environment.
 
 The recommended use case is in combination with **Pangolin**, to automatically make deployed services accessible to the user, including subdomain, network rules, and access control.
-
-### Screenshots
-
-#### Catalog (Landing Page)
-![Catalog](docs/assets/catalog.png)
-
-#### Instance Details
-![Instance Details](docs/assets/instance_details.png)
 
 ---
 
 ## Features
 
 * **Catalog Management**: Maintain a catalog of prebuilt Docker modules.
-* **One-Click Deployment**: Self-service deployment for users.
+* **One-Click Deployment**: Safe and straightforward self-service for sharing resources.
 * **Pangolin Integration**: Automatic network configuration and access control (recommended).
 * **Extensible**: Easily add new modules to the catalog.
 * **Real-time Monitoring**: (In progress) Statistics for deployed instances via WebSockets.
