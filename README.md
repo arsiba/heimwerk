@@ -13,6 +13,9 @@
 
 The recommended use case is in combination with **Pangolin**, to automatically make deployed services accessible to the user, including subdomain, network rules, and access control.
 
+![Catalog Management](docs/assets/catalog.png)
+![Instance Details](docs/assets/instance_details.png)
+
 ---
 
 ## Features
