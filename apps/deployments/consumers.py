@@ -1,4 +1,5 @@
 import asyncio
+import json
 import threading
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
@@ -77,7 +78,7 @@ class InstanceStatusConsumer(AsyncWebsocketConsumer):
         self.thread.start()
 
     async def disconnect(self, close_code):
-        pass
+        self.keep_running = False
 
     def _stream_status_thread(self):
         """runs in background and streams the container status"""
@@ -118,21 +119,49 @@ class InstanceStatsConsumer(AsyncWebsocketConsumer):
         self.thread.start()
 
     async def disconnect(self, close_code):
-        pass
+        self.keep_running = False
 
     def _stream_stats_thread(self):
-        """runs in background and streams the container stats"""
         client = get_docker_client()
         try:
             container = client.containers.get(self.container_name)
-            stats_stream = container.stats(
-                stream=True,
-            )
+            stats_stream = container.stats(stream=True, decode=True)
 
-            for stat in stats_stream:
-                asyncio.run_coroutine_threadsafe(
-                    self.send(text_data=stat.decode()), self.loop
+            for stats in stats_stream:
+                if not self.keep_running:
+                    break
+
+                if "cpu_stats" not in stats or "precpu_stats" not in stats:
+                    continue
+
+                cpu_percent = 0.0
+                cpu_delta = (
+                    stats["cpu_stats"]["cpu_usage"]["total_usage"]
+                    - stats["precpu_stats"]["cpu_usage"]["total_usage"]
                 )
+                system_delta = stats["cpu_stats"].get("system_cpu_usage", 0) - stats[
+                    "precpu_stats"
+                ].get("system_cpu_usage", 0)
+
+                if system_delta > 0.0 and cpu_delta > 0.0:
+                    online_cpus = stats["cpu_stats"].get("online_cpus", 1)
+                    cpu_percent = (cpu_delta / system_delta) * online_cpus * 100.0
+
+                mem_stats = stats.get("memory_stats", {})
+                usage = mem_stats.get("usage", 0)
+                inactive_file = mem_stats.get("stats", {}).get("inactive_file", 0)
+                memory_mib = round((usage - inactive_file) / (1024 * 1024), 2)
+
+                data = {
+                    "memory_mib": memory_mib,
+                    "cpu_percent": round(cpu_percent, 2),
+                }
+
+                if self.loop.is_running():
+                    asyncio.run_coroutine_threadsafe(
+                        self.send(text_data=json.dumps(data)), self.loop
+                    )
+
         except Exception as e:
             pass
 

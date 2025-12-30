@@ -56,7 +56,7 @@ class DeployView(LoginRequiredMixin, UserPassesTestMixin, View):
             status="pending",
             image_name=module.image_name,
             container_port=module.container_port,
-            host_port=get_random_free_port(),
+            host_port=get_random_free_port() if module.container_port else None,
             environment=module.default_env,
             default_restart_policy=module.default_restart_policy,
         )

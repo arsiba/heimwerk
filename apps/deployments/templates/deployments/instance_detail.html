@@ -2,110 +2,185 @@
 
 {% block content %}
 
-  <div class="container my-4">
-    <div class="row">
-      <div class="col-lg-8 mx-auto">
+  <div class="container my-4 mx-4">
 
         <!-- Instance Card -->
-        <div class="card border mb-4 shadow-sm">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-              <h3 class="card-title fw-bold mb-0">{{ instance.name|default:"Unnamed Instance" }}</h3>
-              <span class="badge bg-secondary">{{ instance.id }}</span>
-            </div>
-            <p class="card-text text-secondary mb-3">
-              Module: <strong>{{ instance.module.name }}</strong>
-            </p>
+    <div class="card border mb-4 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <h3 class="card-title fw-bold mb-0">{{ instance.name|default:"Unnamed Instance" }}</h3>
+          <span id="badge-{{ instance.id }}" class="badge
+                                                    {% if instance.status == 'running' %}bg-success
+                                                    {% elif instance.status == 'failed' or instance.status == 'exited' %}bg-danger
+                                                    {% elif instance.status == 'destroyed' %}bg-dark
+                                                    {% elif instance.status == 'paused' %}bg-warning text-dark
+                                                    {% else %}bg-secondary{% endif %}">
+            {{ instance.status }}
+          </span>
+          <script>
+            (function() {
+              const instanceId = "{{ instance.id }}";
+              const badge = document.getElementById('badge-{{ instance.id }}');
+              const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+              const socketUrl = protocol + window.location.host + '/ws/status/' + instanceId + '/';
+              let socket = null;
+
+              function connect() {
+                if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+                  return;
+                }
+
+                socket = new WebSocket(socketUrl);
+
+                socket.onmessage = function(e) {
+                  const newStatus = e.data.trim().toLowerCase();
+                  badge.textContent = newStatus;
+                  badge.className = 'badge';
+
+                  if (newStatus === 'running') badge.classList.add('bg-success');
+                  else if (['failed', 'exited'].includes(newStatus)) badge.classList.add('bg-danger');
+                  else if (newStatus === 'paused') badge.classList.add('bg-warning', 'text-dark');
+                  else if (newStatus === 'destroyed') badge.classList.add('bg-dark');
+                  else badge.classList.add('bg-secondary');
+                };
+
+                socket.onclose = function() {
+                  console.log('Socket closed for ' + instanceId);
+                };
+              }
+
+              connect();
+
+              document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') {
+                  connect();
+                }
+              });
+            })();
+          </script>
+        </div>
+        <p class="card-text text-secondary mb-3">
+          Module: <strong>{{ instance.module.name }}</strong>
+        </p>
 
           <!-- Container Statistics -->
-            <div>
-              <canvas id="memChart"></canvas>
-            </div>
+        <div class="d-flex justify-content-between gap-3 mb-3">
+          <div class="w-100">
+            <canvas id="memChart"></canvas>
+          </div>
+          <div class="w-100">
+            <canvas id="cpuChart"></canvas>
+          </div>
+        </div>
 
-            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-            <script>
-              (function() {
-                const instanceId = "{{ instance.id }}";
-                const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-                const socketUrl = protocol + window.location.host + '/ws/stats/' + instanceId + '/';
+        <script>
+          (function() {
+            const instanceId = "{{ instance.id }}";
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const socketUrl = protocol + window.location.host + '/ws/stats/' + instanceId + '/';
+            const maxDataPoints = 50;
 
-                const ctx = document.getElementById('memChart').getContext('2d');
-                const maxDataPoints = 200;
+            const memCtx = document.getElementById('memChart').getContext('2d');
+            const cpuCtx = document.getElementById('cpuChart').getContext('2d');
 
-                const memChart = new Chart(ctx, {
-                  type: 'line',
-                  data: {
-                    labels: [],
-                    datasets: [{
-                      label: 'Memory Usage (MiB)',
-                      data: [],
-                      borderColor: 'rgba(54, 162, 235, 1)',
-                      backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                      fill: true,
-                      tension: 0.4,
-                      borderWidth: 2
-                    }]
-                  },
-                  options: {
-                    responsive: true,
-                    scales: {
-                      y: {
-                        beginAtZero: false,
-                        title: { display: true, text: 'MiB' }
-                      },
-                      x: {
-                        title: { display: true, text: 'Time' }
-                      }
-                    },
-                    animation: false
-                  }
-                });
+            const blueGradient = memCtx.createLinearGradient(0, 0, 0, 200);
+            blueGradient.addColorStop(0, 'rgba(54, 162, 235, 0.4)');
+            blueGradient.addColorStop(1, 'rgba(54, 162, 235, 0)');
 
-                let socket = null;
+            const purpleGradient = cpuCtx.createLinearGradient(0, 0, 0, 200);
+            purpleGradient.addColorStop(0, 'rgba(153, 102, 255, 0.4)');
+            purpleGradient.addColorStop(1, 'rgba(153, 102, 255, 0)');
 
-                function connect() {
-                  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) return;
-
-                  socket = new WebSocket(socketUrl);
-
-                  socket.onmessage = function(e) {
-                    const stats = JSON.parse(e.data);
-
-                    const usage = stats.memory_stats.usage || 0;
-                    const inactiveFile = (stats.memory_stats.stats && stats.memory_stats.stats.inactive_file) ? stats.memory_stats.stats.inactive_file : 0;
-
-                    const usedBytes = usage - inactiveFile;
-                    const usedMiB = (usedBytes / 1024 / 1024).toFixed(2);
-
-                    const now = new Date().toLocaleTimeString();
-
-                    addData(memChart, now, usedMiB);
-                  };
-
-                  socket.onclose = function() {
-                    console.log('Stats-Socket closed. Retrying in 5s...');
-                    setTimeout(connect, 5000);
-                  };
+            const commonOptions = {
+              responsive: true,
+              maintainAspectRatio: false,
+              elements: {
+                point: { radius: 0 },
+                line: { tension: 0.4 }
+              },
+              plugins: {
+                legend: {
+                  display: true,
+                  labels: { boxWidth: 12, usePointStyle: true, font: { size: 12, weight: 'bold' } }
                 }
-
-                function addData(chart, label, data) {
-                  chart.data.labels.push(label);
-                  chart.data.datasets[0].data.push(data);
-
-                  if (chart.data.labels.length > maxDataPoints) {
-                    chart.data.labels.shift();
-                    chart.data.datasets[0].data.shift();
-                  }
-                  chart.update('none');
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                  ticks: { font: { size: 10 } }
+                },
+                x: {
+                  grid: { display: false },
+                  ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 5, font: { size: 10 } }
                 }
+              },
+              animation: { duration: 400 }
+            };
 
-                connect();
-              })();
-            </script>
+            const memChart = new Chart(memCtx, {
+              type: 'line',
+              data: {
+                labels: [],
+                datasets: [{
+                  label: 'Memory (MiB)',
+                  data: [],
+                  borderColor: '#36A2EB',
+                  backgroundColor: blueGradient,
+                  fill: true,
+                  borderWidth: 2
+                }]
+              },
+              options: commonOptions
+            });
 
+            const cpuChart = new Chart(cpuCtx, {
+              type: 'line',
+              data: {
+                labels: [],
+                datasets: [{
+                  label: 'CPU (%)',
+                  data: [],
+                  borderColor: '#9966FF',
+                  backgroundColor: purpleGradient,
+                  fill: true,
+                  borderWidth: 2
+                }]
+              },
+              options: commonOptions
+            });
 
+            let socket = null;
+            function connect() {
+              if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) return;
+              socket = new WebSocket(socketUrl);
+              socket.onmessage = function(e) {
+                const stats = JSON.parse(e.data);
+                const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                addData(memChart, now, stats.memory_mib);
+                addData(cpuChart, now, stats.cpu_percent);
+              };
+              socket.onclose = function() { setTimeout(connect, 5000); };
+            }
+
+            function addData(chart, label, data) {
+              chart.data.labels.push(label);
+              chart.data.datasets[0].data.push(data);
+              if (chart.data.labels.length > maxDataPoints) {
+                chart.data.labels.shift();
+                chart.data.datasets[0].data.shift();
+              }
+              chart.update('none');
+            }
+            connect();
+          })();
+        </script>
+
+        <div class="row">
             <!-- Docker Info -->
+          <div class="col-sm">
             <ul class="list-unstyled small mb-3">
               <li><strong>Image:</strong> {{ instance.image_name|default:"N/A" }}</li>
               {% if instance.container_port %}
@@ -137,59 +212,22 @@
               {% endif %}
             </ul>
 
-            <p class="text-muted mb-1">
-              <strong>Status:</strong>
-              <span id="badge-{{ instance.id }}" class="badge
-                                                        {% if instance.status == 'running' %}bg-success
-                                                        {% elif instance.status == 'failed' or instance.status == 'exited' %}bg-danger
-                                                        {% elif instance.status == 'destroyed' %}bg-dark
-                                                        {% elif instance.status == 'paused' %}bg-warning text-dark
-                                                        {% else %}bg-secondary{% endif %}">
-                {{ instance.status }}
-              </span>
-            </p>
+          </div>
 
-            <script>
-              (function() {
-                const instanceId = "{{ instance.id }}";
-                const badge = document.getElementById('badge-{{ instance.id }}');
-                const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-                const socketUrl = protocol + window.location.host + '/ws/status/' + instanceId + '/';
-                let socket = null;
+          <div class="col-sm">
+            <div>
+              <ul class="list-unstyled small mb-3">
+                <li><strong>Owner:</strong> {{ instance.owner.username }}</li>
+                <li><strong>Created:</strong> {{ instance.created_at|date:"Y-m-d H:i" }}</li>
+                <li><strong>Last updated:</strong> {{ instance.updated_at|date:"Y-m-d H:i" }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
 
-                function connect() {
-                  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
-                    return;
-                  }
-
-                  socket = new WebSocket(socketUrl);
-
-                  socket.onmessage = function(e) {
-                    const newStatus = e.data.trim().toLowerCase();
-                    badge.textContent = newStatus;
-                    badge.className = 'badge';
-
-                    if (newStatus === 'running') badge.classList.add('bg-success');
-                    else if (['failed', 'exited'].includes(newStatus)) badge.classList.add('bg-danger');
-                    else if (newStatus === 'paused') badge.classList.add('bg-warning', 'text-dark');
-                    else if (newStatus === 'destroyed') badge.classList.add('bg-dark');
-                    else badge.classList.add('bg-secondary');
-                  };
-
-                  socket.onclose = function() {
-                    console.log('Socket closed for ' + instanceId);
-                  };
-                }
-
-                connect();
-
-                document.addEventListener('visibilitychange', function() {
-                  if (document.visibilityState === 'visible') {
-                    connect();
-                  }
-                });
-              })();
-            </script>
+        {% if user.is_authenticated and user == instance.owner %}
+          <div class="mt-3 d-flex gap-2">
+            <a href="{% url 'index' %}" class="btn btn-outline-secondary btn-sm flex-fill">Back</a>
 
             {% if instance.docker_output %}
               <div class="border-top pt-3">
@@ -199,101 +237,86 @@
                 </p>
               </div>
             {% endif %}
-
-            <div class="border-top pt-3">
-              <p class="text-muted mb-1">
-                <strong>Owner:</strong> {{ instance.owner.username }}<br>
-                <strong>Created:</strong> {{ instance.created_at|date:"Y-m-d H:i" }}<br>
-                <strong>Last updated:</strong> {{ instance.updated_at|date:"Y-m-d H:i" }}
-              </p>
-            </div>
-
-            {% if user.is_authenticated and user == instance.owner %}
-              <div class="mt-3 d-flex gap-2">
-                <a href="{% url 'index' %}" class="btn btn-outline-secondary btn-sm flex-fill">Back</a>
-
                 <!-- Pause button -->
 
-                <form action="{% url 'deployments:instance-action' instance.id %}" method="post" class="flex-fill">
-                  {% csrf_token %}
-                  {% if instance.status == 'running' %}
-                    <input type="hidden" name="action" value="pause">
-                    <button type="submit" class="btn btn-outline-secondary btn-sm w-100">Pause</button>
-                  {% elif instance.status == 'paused' %}
-                    <input type="hidden" name="action" value="unpause">
-                    <button type="submit" class="btn btn-outline-secondary btn-sm w-100">Unpause</button>
-                  {% endif %}
-                </form>
+            <form action="{% url 'deployments:instance-action' instance.id %}" method="post" class="flex-fill">
+              {% csrf_token %}
+              {% if instance.status == 'running' %}
+                <input type="hidden" name="action" value="pause">
+                <button type="submit" class="btn btn-outline-secondary btn-sm w-100">Pause</button>
+              {% elif instance.status == 'paused' %}
+                <input type="hidden" name="action" value="unpause">
+                <button type="submit" class="btn btn-outline-secondary btn-sm w-100">Unpause</button>
+              {% endif %}
+            </form>
 
 
                 <!-- Delete button -->
-                <form action="{% url 'deployments:instance-action' instance.id %}" method="post" class="flex-fill">
-                  {% csrf_token %}
-                  <input type="hidden" name="action" value="destroy">
-                  <button type="submit" class="btn btn-danger btn-sm w-100">Delete</button>
-                </form>
-              </div>
+            <form action="{% url 'deployments:instance-action' instance.id %}" method="post" class="flex-fill">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="destroy">
+              <button type="submit" class="btn btn-danger btn-sm w-100">Delete</button>
+            </form>
+          </div>
 
-              <hr>
+          <hr>
 
                 <!-- Live Logs -->
-              <div class="card border mb-4 shadow-sm bg-dark text-light">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                  <span>Live Logs</span>
-                  <button onclick="clearLogs()" class="btn btn-sm btn-outline-light">Clear</button>
-                </div>
-                <div class="card-body p-0">
+          <div class="card border mb-4 shadow-sm bg-dark text-light">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span>Live Logs</span>
+              <button onclick="clearLogs()" class="btn btn-sm btn-outline-light">Clear</button>
+            </div>
+            <div class="card-body p-0">
                     <pre id="terminal" style="height: 300px; overflow-y: auto; padding: 10px; margin: 0; white-space: pre-wrap; font-family: monospace; font-size: 0.9rem;"></pre>
-                </div>
-              </div>
-
-              <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                  const instanceId = "{{ instance.id }}";
-                  const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-                  const socketUrl = protocol + window.location.host + '/ws/logs/' + instanceId + '/';
-
-                  const terminal = document.getElementById('terminal');
-                  let socket = null;
-
-                  function connect() {
-                    socket = new WebSocket(socketUrl);
-
-                    socket.onopen = function(e) {
-                      terminal.innerHTML += '<div class="text-success">--- Connected to Log Stream ---</div>';
-                    };
-
-                    socket.onmessage = function(e) {
-                      const span = document.createElement('span');
-                      span.textContent = e.data;
-                      terminal.appendChild(span);
-                      terminal.scrollTop = terminal.scrollHeight;
-                    };
-
-                    socket.onclose = function(e) {
-                      terminal.innerHTML += '<div class="text-warning">--- Connection closed ---</div>';
-                      console.error('Socket closed unexpectedly');
-                    };
-                  }
-
-                  connect();
-                });
-
-                function clearLogs() {
-                  document.getElementById('terminal').innerHTML = '';
-                }
-              </script>
-
-            {% else %}
-              <div class="mt-3">
-                <a href="{% url 'index' %}" class="btn btn-outline-secondary btn-sm">Back to list</a>
-              </div>
-            {% endif %}
+            </div>
           </div>
-        </div>
 
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              const instanceId = "{{ instance.id }}";
+              const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+              const socketUrl = protocol + window.location.host + '/ws/logs/' + instanceId + '/';
+
+              const terminal = document.getElementById('terminal');
+              let socket = null;
+
+              function connect() {
+                socket = new WebSocket(socketUrl);
+
+                socket.onopen = function(e) {
+                  terminal.innerHTML += '<div class="text-success">--- Connected to Log Stream ---</div>';
+                };
+
+                socket.onmessage = function(e) {
+                  const span = document.createElement('span');
+                  span.textContent = e.data;
+                  terminal.appendChild(span);
+                  terminal.scrollTop = terminal.scrollHeight;
+                };
+
+                socket.onclose = function(e) {
+                  terminal.innerHTML += '<div class="text-warning">--- Connection closed ---</div>';
+                  console.error('Socket closed unexpectedly');
+                };
+              }
+
+              connect();
+            });
+
+            function clearLogs() {
+              document.getElementById('terminal').innerHTML = '';
+            }
+          </script>
+
+        {% else %}
+          <div class="mt-3">
+            <a href="{% url 'index' %}" class="btn btn-outline-secondary btn-sm">Back to list</a>
+          </div>
+        {% endif %}
       </div>
     </div>
+
   </div>
 
 {% endblock %}

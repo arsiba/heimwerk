@@ -111,7 +111,7 @@ def start_container(
     container = client.containers.run(
         image=image_name,
         name=container_name,
-        ports=ports,
+        ports=ports if not None else {},
         environment=environment,
         detach=detach,
         restart_policy=restart_policy,
