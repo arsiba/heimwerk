@@ -83,14 +83,23 @@
 
                 <!-- Actions -->
                 <div class="pt-1 mt-auto d-flex">
-                  <a href="{{ instance.get_absolute_url }}" class="btn btn-outline-dark btn-sm w-100">Manage</a>
+                  <a href="{{ instance.get_absolute_url }}" class="btn btn-outline-dark btn-sm w-100">
+                    <i class="bi bi-sliders me-2"></i>
+                    Manage
+                  </a>
                 </div>
                 {% if instance.status == 'running' %}
                   <div class="justify-content-between align-items-start">
                     <div class="pt-1 mt-auto d-flex gap-1">
-                      <a href="http://{{ instance.get_local_resource_url }}" class="btn btn-outline-dark btn-sm w-100">Local Url</a>
+                      <a href="http://{{ instance.get_local_resource_url }}" target="_blank" class="btn btn-outline-dark btn-sm w-100">
+                        <i class="bi bi-hdd-network me-2"></i>
+                        Local Url
+                      </a>
                       {% if active_host.pangolin_features %}
-                        <a href="https://{{ instance.get_external_resource_url }}" class="btn btn-outline-dark btn-sm w-100">Public Url</a>
+                        <a href="https://{{ instance.get_external_resource_url }}" target="_blank" class="btn btn-outline-dark btn-sm w-100">
+                          <i class="bi bi-globe me-2"></i>
+                          Public Url
+                        </a>
                       {% endif %}
                     </div>
                   </div>
