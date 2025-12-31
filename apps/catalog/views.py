@@ -1,6 +1,8 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import render
 from django.views import generic
+
+from core.utils.permissions_check import user_can_edit
 from .models import Module
 from django.views.generic.edit import CreateView
 from django.views.generic.edit import UpdateView
@@ -44,14 +46,6 @@ class ModuleDetailView(generic.DetailView):
             or self.request.user.groups.filter(name="editor").exists()
         )
         return context
-
-
-def user_can_deploy(user):
-    return user.is_superuser or user.groups.filter(name__in=["user", "editor"]).exists()
-
-
-def user_can_edit(user):
-    return user.is_superuser or user.groups.filter(name="editor").exists()
 
 
 class ModuleCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):

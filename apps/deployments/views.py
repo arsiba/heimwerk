@@ -1,7 +1,4 @@
-import json
 import threading
-from cProfile import label
-
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect, render
@@ -9,7 +6,6 @@ from django.views import View, generic
 from django.views.decorators.http import require_POST
 
 from apps.catalog.models import Module
-from apps.catalog.views import user_can_deploy
 from apps.deployments.models import Instance
 from core.docker.deploy import (
     deploy_instance,
@@ -19,6 +15,7 @@ from core.docker.deploy import (
     unpause_instance,
     destroy_instance,
 )
+from core.utils.permissions_check import user_can_deploy
 
 
 class DeployView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -85,14 +82,6 @@ class InstanceListView(generic.ListView):
             "owned_Instances": owned_instances,
         }
         return new_context
-
-
-def user_can_deploy(user):
-    return user.is_superuser or user.groups.filter(name__in=["user", "editor"]).exists()
-
-
-def user_can_edit(user):
-    return user.is_superuser or user.groups.filter(name="editor").exists()
 
 
 class InstanceDetailView(LoginRequiredMixin, UserPassesTestMixin, generic.DetailView):

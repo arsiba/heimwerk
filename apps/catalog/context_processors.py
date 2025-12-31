@@ -1,4 +1,5 @@
 # main/context_processors.py
+from .models import Module
 from ..deployments.models import Instance
 from ..hosts.models import DockerHost
 
@@ -14,6 +15,7 @@ def global_user_context(request):
             "is_user": False,
             "user_instances_count": 0,
             "all_instances_count": 0,
+            "all_modules_count": 0,
             "can_deploy": False,
         }
 
@@ -23,6 +25,7 @@ def global_user_context(request):
 
     user_instances_count = Instance.objects.filter(owner=user).count()
     all_instances_count = Instance.objects.count()
+    all_modules_count = Module.objects.count()
     can_deploy = is_admin or is_editor or is_user
 
     return {
@@ -31,6 +34,7 @@ def global_user_context(request):
         "is_user": is_user,
         "user_instances_count": user_instances_count,
         "all_instances_count": all_instances_count,
+        "all_modules_count": all_modules_count,
         "can_deploy": can_deploy,
     }
 

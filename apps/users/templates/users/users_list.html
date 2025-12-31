@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+{% extends "base_generic.html" %}
+
+{% block content %}
+
+    <div class="container my-4">
+        <h1>User Administration</h1>
+
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Username</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Groups</th>
+                    <th scope="col">Quota</th>
+                    <th scope="col">Last Login</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for up in userProfiles %}
+                    <tr>
+                        <th scope="row">{{ forloop.counter }}</th>
+                        <td>{{ up.user.username }}</td>
+                        <td>{{ up.user.email }}</td>
+                        <td>{% for group in up.user.groups.all %}
+                            <span class="badge bg-dark">{{ group.name }}</span>
+                        {% empty %}
+                            <span>Keine Gruppen</span>
+                        {% endfor %}</td>
+                        <td>{{ up.quota }}</td>
+                        <td>{{ up.user.last_login |date:"d.m.Y"}}</td>
+                        <td>
+                            <div class="d-flex justify-content-start">
+                                <i class="bi bi-pencil-square me-2"></i>
+                                <i class="bi bi-trash text-danger"></i>
+                            </div>
+
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="fixed-bottom p-4 text-end" style="z-index: 1030; pointer-events: none;">
+            <a href="" class="btn btn-warning shadow-lg px-4 py-2" style="pointer-events: auto;">
+                <i class="bi bi-plus-lg"></i> Add User
+            </a>
+        </div>
+
+
+{% endblock %}
