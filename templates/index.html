@@ -6,11 +6,13 @@
 
 {% block content %}
 
+  {% include "header.html" with parent_page="Catalog" current_page="Modules"%}
+
 <!-- Modules Section -->
   <div class="container py-2" id="modules">
 
     {% if modules %}
-      <div class="row g-4 mt-2">
+      <div class="row g-4">
         {% for module in modules %}
           <div class="col-md-6 col-xl-4">
             <div class="card h-100 border">

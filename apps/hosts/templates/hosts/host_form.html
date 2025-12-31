@@ -1,7 +1,9 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-    <div class="container my-5">
+    {% include "header.html" with parent_page="Admin" current_page="Host" %}
+
+    <div class="container">
 
     <!-- Page header -->
         <div class="mb-4">

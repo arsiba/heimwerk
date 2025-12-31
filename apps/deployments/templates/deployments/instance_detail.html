@@ -1,8 +1,10 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
+  {% include "header.html" with parent_page="Catalog" current_page="Instances" sub_page=instance.name%}
 
-  <div class="container my-4 mx-4">
+
+  <div class="container">
 
         <!-- Instance Card -->
     <div class="card border mb-4 shadow-sm">

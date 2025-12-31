@@ -1,6 +1,7 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
+  {% include "header.html" with parent_page="Catalog" current_page="Modules" sub_page=object.name %}
 
   <div class="container my-4">
     <div class="row">

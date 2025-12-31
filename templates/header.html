@@ -1,0 +1,28 @@
+<div class="container-fluid bg-light border-bottom mb-4 py-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        {% if parent_page %}
+                            <li class="breadcrumb-item small">{{ parent_page}}</li>
+                        {% endif %}
+                        <li class="breadcrumb-item small active" aria-current="page">{{ current_page }}</li>
+                        {% if sub_page %}
+                            <li class="breadcrumb-item small">{{ sub_page}}</li>
+                        {% endif %}
+                    </ol>
+                </nav>
+            </div>
+
+            <div class="col-md-6 text-md-end">
+                <div class="badge border bg-dark border-secondary rounded-pill d-inline-flex align-items-center px-3 py-2">
+                    <a href="https://github.com/arsiba/heimwerk" class="text-decoration-none text-white me-2">
+                        View on GitHub
+                    </a>
+                    <i class="bi bi-github fs-5"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

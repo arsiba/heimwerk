@@ -1,7 +1,9 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
-  <div class="container py-5">
+  {% include "header.html" with parent_page="Catalog" current_page="Instances" %}
+
+  <div class="container ">
 
     {% if owned_Instances %}
       <div class="row g-4">

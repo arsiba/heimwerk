@@ -2,9 +2,10 @@
 {% extends "base_generic.html" %}
 
 {% block content %}
+    {% include "header.html" with parent_page="Admin" current_page="Users"%}
+
 
     <div class="container my-4">
-        <h1>User Administration</h1>
 
         <table class="table table-hover">
             <thead>
@@ -42,12 +43,5 @@
                 {% endfor %}
             </table>
         </div>
-
-        <div class="fixed-bottom p-4 text-end" style="z-index: 1030; pointer-events: none;">
-            <a href="" class="btn btn-warning shadow-lg px-4 py-2" style="pointer-events: auto;">
-                <i class="bi bi-plus-lg"></i> Add User
-            </a>
-        </div>
-
 
 {% endblock %}
