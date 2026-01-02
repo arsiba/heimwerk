@@ -10,17 +10,10 @@ from django.views.generic.edit import UpdateView
 
 def index(request):
     """View function for home page of site."""
-
-    modules = Module.objects.all()[:5]
-
-    num_visits = request.session.get("num_visits", 0)
-    num_visits += 1
-    user = request.user
-
+    modules = Module.objects.all()
     context = {
         "modules": modules,
     }
-
     return render(request, "index.html", context=context)
 
 
