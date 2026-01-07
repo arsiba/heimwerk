@@ -3,3 +3,4 @@ docker==7.1.0
 pillow
 channels
 daphne
+python-dotenv
