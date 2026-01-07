@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 # =========================================================
-# HEIMWERK INSTALLATION SCRIPT
+# HEIMWERK INSTALLATION
 # =========================================================
 
 # Colors
@@ -23,7 +23,7 @@ ARROW="${CYAN}→${NC}"
 COMPOSE_FILE="docker-compose.prod.yml"
 ENV_FILE=".env"
 PROJECT_NAME="heimwerk"
-DB_VOLUME="${PROJECT_NAME}_db_data"
+DB_VOLUME="${PROJECT_NAME}_postgres_data"
 REPO_RAW_URL="https://raw.githubusercontent.com/arsiba/heimwerk/main"
 
 # ---------------------------------------------------------
@@ -42,8 +42,7 @@ print_header() {
 }
 
 print_step() {
-    echo ""
-    echo -e "${BOLD}${BLUE}▶ [$1] $2${NC}"
+    echo -e "\n${BOLD}${BLUE}▶ [$1] $2${NC}"
 }
 
 print_success() { echo -e "  ${CHECK} $1"; }
@@ -55,126 +54,135 @@ fatal() {
     exit 1
 }
 
-# Improved trap to show where it failed
+# Trap to catch errors and provide context
 error_handler() {
-    echo ""
-    fatal "Installation failed at line $1. Check logs with 'docker compose logs'."
+    echo -e "\n${RED}Critical Error occurred at line $1.${NC}"
+    echo -e "Check logs: ${CYAN}docker compose -f ${COMPOSE_FILE} logs --tail=20${NC}"
+    exit 1
 }
 trap 'error_handler $LINENO' ERR
 
 # ---------------------------------------------------------
-# Step 0: Checks
-# ---------------------------------------------------------
-
-check_requirements() {
-    print_step "0/7" "Checking Requirements"
-
-    for cmd in docker curl openssl; do
-        if ! command -v "$cmd" &>/dev/null; then
-            fatal "$cmd is not installed. Please install it first."
-        fi
-        print_success "$cmd found"
-    done
-
-    if ! docker compose version &>/dev/null; then
-        fatal "Docker Compose V2 plugin is missing (run 'docker compose' to verify)."
-    fi
-    print_success "Docker Compose found"
-}
-
-# ---------------------------------------------------------
-# Execution
+# 0/7 Requirements
 # ---------------------------------------------------------
 
 print_header
-check_requirements
+print_step "0/7" "Checking Requirements"
 
-# Step 1: Configuration
+for cmd in docker curl openssl; do
+    command -v "$cmd" &>/dev/null || fatal "$cmd is not installed."
+    print_success "$cmd found"
+done
+
+docker compose version &>/dev/null || fatal "Docker Compose V2 is required."
+print_success "Docker Compose found"
+
+# ---------------------------------------------------------
+# 1/7 Configuration
+# ---------------------------------------------------------
+
 print_step "1/7" "Configuration"
+
 read -rp "Enter your domain or IP [localhost]: " USER_DOMAIN < /dev/tty
 USER_DOMAIN=${USER_DOMAIN:-localhost}
 print_info "Domain set to: $USER_DOMAIN"
 
-# Safety check for existing data
-if docker volume ls --format '{{.Name}}' | grep -q "^${DB_VOLUME}$"; then
-    echo -e "${ORANGE}! Existing database volume detected.${NC}"
-    read -rp "Keep existing data? [Y/n]: " KEEP_DATA < /dev/tty
-    if [[ ! $KEEP_DATA =~ ^[Yy]$ ]] && [[ ! -z $KEEP_DATA ]]; then
-        fatal "Installation aborted to protect existing data."
-    fi
-fi
+# ---------------------------------------------------------
+# 2/7 Download
+# ---------------------------------------------------------
 
-# Step 2: Download files
 print_step "2/7" "Downloading Production Files"
 curl -fsSL "${REPO_RAW_URL}/${COMPOSE_FILE}" -o "${COMPOSE_FILE}"
 curl -fsSL "${REPO_RAW_URL}/nginx.conf" -o nginx.conf
-print_success "Production files downloaded"
+print_success "Files downloaded"
 
-# Step 3: Environment Setup
+# ---------------------------------------------------------
+# 3/7 Environment (Auto-Generation)
+# ---------------------------------------------------------
+
 print_step "3/7" "Setting Up Environment"
-RAND_SECRET=$(openssl rand -hex 32)
-DB_PASS=$(openssl rand -hex 24)
 
-cat > "${ENV_FILE}" <<EOF
+if [ -f "$ENV_FILE" ]; then
+    print_info ".env already exists. Skipping generation."
+else
+    RAND_SECRET=$(openssl rand -hex 32)
+    DB_PASS=$(openssl rand -hex 24)
+
+    cat > "${ENV_FILE}" <<EOF
 SECRET_KEY=${RAND_SECRET}
 DEBUG=False
-ALLOWED_HOSTS=localhost 127.0.0.1 ::1 ${USER_DOMAIN}
+ALLOWED_HOSTS="127.0.0.1 localhost ::1 ${USER_DOMAIN}"
+
 POSTGRES_DB=heimwerk
 POSTGRES_USER=heimwerk_admin
 POSTGRES_PASSWORD=${DB_PASS}
+
 DATABASE_URL=postgres://heimwerk_admin:${DB_PASS}@db:5432/heimwerk
 EOF
-chmod 600 "${ENV_FILE}"
-print_success "Environment file created (.env)"
+    chmod 600 "${ENV_FILE}"
+    print_success ".env file generated with secure secrets"
+fi
 
-# Step 4: Docker Start
+# ---------------------------------------------------------
+# 4/7 Starting Services
+# ---------------------------------------------------------
+
 print_step "4/7" "Starting Docker Services"
 docker compose -f "${COMPOSE_FILE}" pull --quiet
 docker compose -f "${COMPOSE_FILE}" up -d
-print_success "Docker containers started"
+print_success "Containers are starting..."
 
-# Step 5: Wait for Database (Robust Logic)
-print_step "5/7" "Waiting for Database"
-MAX_RETRIES=30
-RETRY_COUNT=0
+# ---------------------------------------------------------
+# 5/7 Wait for Database (The "Better" Method)
+# ---------------------------------------------------------
 
-until [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
-    # Check if DB is ready using pg_isready
-    if docker compose -f "${COMPOSE_FILE}" exec -T db pg_isready -U heimwerk_admin > /dev/null 2>&1; then
-        break
-    fi
+print_step "5/7" "Waiting for Database Healthcheck"
+
+# Since your YAML has a healthcheck, we just wait for the status to change.
+# This avoids the 'exec' crash problem entirely.
+until [ "$(docker inspect -f '{{.State.Health.Status}}' $(docker compose -f ${COMPOSE_FILE} ps -q db))" == "healthy" ]; do
     echo -n "."
-    ((RETRY_COUNT++))
     sleep 2
 done
 
-if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-    echo ""
-    fatal "Database failed to become ready in time. Check 'docker compose logs db'."
-fi
-
 echo ""
-print_success "Database is healthy"
+print_success "Database is ready and healthy"
 
-# Step 6: Database and Static Files
-print_step "6/7" "Database and Static Files"
+# ---------------------------------------------------------
+# 6/7 Database and Static Files
+# ---------------------------------------------------------
+
+print_step "6/7" "Backend Initialization"
+
 print_info "Running database migrations..."
 docker compose -f "${COMPOSE_FILE}" exec -T heimwerk python manage.py migrate --no-input
 
 print_info "Collecting static files..."
 docker compose -f "${COMPOSE_FILE}" exec -T heimwerk python manage.py collectstatic --no-input --clear
-print_success "Database and assets ready"
 
-# Step 7: Admin User
+print_success "Database migrations and assets complete"
+
+# ---------------------------------------------------------
+# 7/7 Admin User
+# ---------------------------------------------------------
+
 print_step "7/7" "Creating Admin User"
-echo -e "${ORANGE}Interactive: Please set up your admin account now.${NC}"
-docker compose -f "${COMPOSE_FILE}" exec heimwerk python manage.py createsuperuser || print_info "Superuser creation skipped or failed (perhaps it already exists?)"
+echo -e "${ORANGE}Attention: You will now create the Django superuser.${NC}"
+# Use exec without -T here because we WANT the interactive terminal
+docker compose -f "${COMPOSE_FILE}" exec heimwerk python manage.py createsuperuser
 
+# ---------------------------------------------------------
 # Finalize
-print_info "Finalizing services..."
-docker compose -f "${COMPOSE_FILE}" restart heimwerk nginx
+# ---------------------------------------------------------
+
+print_info "Finalizing and restarting Nginx..."
+docker compose -f "${COMPOSE_FILE}" restart nginx
 
 echo -e "\n${BOLD}${GREEN}╔══════════════════════════════════════════╗"
 echo -e "║        ✓ INSTALLATION COMPLETE ✓         ║"
 echo -e "╚══════════════════════════════════════════╝${NC}\n"
-echo -e "${ORANGE}Access:${NC} http://${USER_DOMAIN}"
+echo -e "${ORANGE}URL:${NC} http://${USER_DOMAIN}"
+echo -e "${ORANGE}Management:${NC}"
+echo -e "  Stop:    docker compose -f ${COMPOSE_FILE} stop"
+echo -e "  Logs:    docker compose -f ${COMPOSE_FILE} logs -f"
+echo ""
