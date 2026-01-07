@@ -17,6 +17,70 @@ The recommended use case is in combination with **Pangolin**, to automatically m
 ![Instance Details](docs/assets/instance_details.png)
 
 ---
+## Installation
+
+### Quick Production Install (Recommended)
+
+The fastest way to deploy Heimwerk on a Linux server. This script downloads the necessary production files, generates a secure `SECRET_KEY`, and configures your domain.
+
+Run the following command:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/arsiba/heimwerk/main/install.sh | bash
+
+```
+
+### Manual Production Setup
+
+If you prefer to set up the containers manually:
+
+1. **Download the production files:**
+`docker-compose.prod.yml`, `nginx.conf`, and `.env.example`.
+2. **Configure environment:**
+```bash
+cp .env.example .env
+# Edit .env to set your ALLOWED_HOSTS and a secure SECRET_KEY
+
+```
+
+
+3. **Deploy:**
+```bash
+docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml exec heimwerk python manage.py migrate
+docker compose -f docker-compose.prod.yml exec heimwerk python manage.py createsuperuser
+
+```
+
+
+
+### Local Development Setup
+
+1. **Clone & Virtual Env:**
+```bash
+git clone https://github.com/arsiba/heimwerk.git
+cd heimwerk
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+```
+
+
+2. **Install & Migrate:**
+```bash
+pip install -r requirements.txt
+cp .env.example .env # Ensure DEBUG=True for local dev
+python manage.py migrate
+python manage.py createsuperuser
+
+```
+
+
+3. **Run:**
+```bash
+python manage.py runserver
+
+```
 
 ## Features
 

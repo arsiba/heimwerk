@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  heimwerk:
+    # Pull the pre-built image from your GitHub Registry
+    image: ghcr.io/arsiba/heimwerk:latest
+    restart: always
+    # Daphne is used for ASGI/Websocket support
+    command: daphne -b 0.0.0.0 -p 8000 config.asgi:application
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - DATABASE_URL=${DATABASE_URL}
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      # Essential for Heimwerk to manage other containers on the host
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:latest
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+    volumes:
+      - ./nginx.conf:/etc/nginx/templates/default.conf.template
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    depends_on:
+      - heimwerk
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
