@@ -1,9 +1,7 @@
 [![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-highlight.svg)](https://sonarcloud.io/summary/new_code?id=arsiba_heimwerk)
 
 # Heimwerk
-
-[![Under Development](https://img.shields.io/badge/status-under%20development-orange)](docs/TODO.md)
-[![TODOs](https://img.shields.io/badge/TODO-docs%2FTODO.md-lightgrey)](docs/TODO.md)
+[![GitHub release](https://img.shields.io/github/release/arsiba/heimwerk.svg)](https://github.com/arsiba/heimwerk/releases/latest)
 
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=arsiba_heimwerk&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=arsiba_heimwerk)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=arsiba_heimwerk&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=arsiba_heimwerk)
