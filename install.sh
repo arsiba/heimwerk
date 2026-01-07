@@ -150,17 +150,16 @@ docker compose -f "${COMPOSE_FILE}" up -d
 print_success "Docker containers started"
 
 # ---------------------------------------------------------
-# Wait for database
+# Wait for database (Docker healthcheck)
 # ---------------------------------------------------------
 
 print_step "5/7" "Waiting for Database"
 
-until docker compose -f "${COMPOSE_FILE}" exec -T db \
-    pg_isready -U heimwerk_admin &>/dev/null; do
+until [ "$(docker inspect -f '{{.State.Health.Status}}' heimwerk-db-1)" = "healthy" ]; do
     sleep 2
 done
 
-print_success "Database is ready"
+print_success "Database is healthy"
 
 # ---------------------------------------------------------
 # Database and static files
