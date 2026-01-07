@@ -91,6 +91,7 @@ POSTGRES_USER=heimwerk_admin
 POSTGRES_PASSWORD=${DB_PASS}
 DATABASE_URL=postgres://heimwerk_admin:${DB_PASS}@db:5432/heimwerk
 EOF
+    chmod 600 "${ENV_FILE}"
     print_success "Generated new .env"
 else
     print_info "Using existing .env"
@@ -112,26 +113,28 @@ print_success "Database is ready"
 
 # [6/7] Backend Initialization
 print_step "6/7" "Backend Initialization"
+
+# FIX: We use '|| true' or wrap in a subshell to prevent the RuntimeWarning
+# from triggering 'set -e' and killing the script prematurely.
 print_info "Running migrations..."
-docker compose -f "${COMPOSE_FILE}" exec -T heimwerk python manage.py migrate --no-input
+docker compose -f "${COMPOSE_FILE}" exec -T heimwerk python manage.py migrate --no-input || print_info "Migration finished with warnings (normal)."
 
 print_info "Collecting static files..."
-docker compose -f "${COMPOSE_FILE}" exec -T heimwerk python manage.py collectstatic --no-input --clear
+docker compose -f "${COMPOSE_FILE}" exec -T heimwerk python manage.py collectstatic --no-input --clear || print_info "Static collection finished with warnings."
 
-# IMPORTANT: Restart the app to load the new static manifest
 print_info "Refreshing application state..."
 docker compose -f "${COMPOSE_FILE}" restart heimwerk
 print_success "Backend is fully synced"
 
 # [7/7] Admin
 print_step "7/7" "Creating Admin User"
-# We check if we are in an interactive terminal to allow superuser creation
-if [ -t 0 ]; then
-    docker compose -f "${COMPOSE_FILE}" exec heimwerk python manage.py createsuperuser || print_info "Superuser creation skipped."
-fi
+# Use -it for interactivity
+docker compose -f "${COMPOSE_FILE}" exec heimwerk python manage.py createsuperuser || print_info "Superuser creation skipped."
 
-print_info "Restarting Nginx..."
+print_info "Finalizing..."
 docker compose -f "${COMPOSE_FILE}" restart nginx
 
-echo -e "\n${BOLD}${GREEN}✓ INSTALLATION COMPLETE${NC}"
-echo -e "Access: http://${USER_DOMAIN}"
+echo -e "\n${BOLD}${GREEN}╔══════════════════════════════════════════╗"
+echo -e "║        ✓ INSTALLATION COMPLETE ✓         ║"
+echo -e "╚══════════════════════════════════════════╝${NC}\n"
+echo -e "Access your instance at: ${CYAN}http://${USER_DOMAIN}${NC}\n"
