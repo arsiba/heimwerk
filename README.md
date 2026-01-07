@@ -26,7 +26,7 @@ The fastest way to deploy Heimwerk on a Linux server. This script downloads the 
 Run the following command:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/arsiba/heimwerk/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/arsiba/heimwerk/refs/heads/main/install.sh | bash
 
 ```
 
