@@ -47,7 +47,7 @@ print_info() {
 }
 
 check_requirements() {
-    print_step "0/6" "Checking Requirements"
+    print_step "0/7" "Checking Requirements"
 
     local missing_deps=0
 
@@ -103,7 +103,7 @@ print_header
 check_requirements
 
 # 1. Configuration
-print_step "1/6" "Configuration"
+print_step "1/7" "Configuration"
 
 echo -n -e "${ORANGE}Enter your domain or IP ${BOLD}[localhost]${NC}${ORANGE}: ${NC}"
 read -r USER_DOMAIN < /dev/tty
@@ -134,7 +134,7 @@ while true; do
 done
 
 # 2. Download files
-print_step "2/6" "Downloading Production Files"
+print_step "2/7" "Downloading Production Files"
 REPO_RAW_URL="https://raw.githubusercontent.com/arsiba/heimwerk/main"
 
 print_info "Fetching docker-compose.prod.yml..."
@@ -154,7 +154,7 @@ else
 fi
 
 # 3. Environment Setup
-print_step "3/6" "Setting Up Environment"
+print_step "3/7" "Setting Up Environment"
 
 if [ ! -f .env ]; then
     print_info "Generating secure credentials..."
@@ -176,7 +176,7 @@ else
 fi
 
 # 4. Start Docker
-print_step "4/6" "Starting Docker Services"
+print_step "4/7" "Starting Docker Services"
 
 print_info "Pulling Docker images..."
 docker compose -f docker-compose.prod.yml pull
@@ -186,44 +186,95 @@ docker compose -f docker-compose.prod.yml up -d
 
 print_success "Docker services started"
 
-# 5. Database Setup
-print_step "5/6" "Initializing Database"
+# 5. Wait for services
+print_step "5/7" "Waiting for Services"
 
-print_info "Waiting for services to be ready..."
+print_info "Waiting for database to be ready..."
 sleep 10
+
+# Check if services are actually running
+if ! docker compose -f docker-compose.prod.yml ps | grep -q "Up"; then
+    print_error "Services failed to start properly"
+    docker compose -f docker-compose.prod.yml logs
+    exit 1
+fi
+
+print_success "Services are ready"
+
+# 6. Database and Static Files
+print_step "6/7" "Setting Up Database and Static Files"
 
 print_info "Running database migrations..."
 if docker compose -f docker-compose.prod.yml exec -T heimwerk python manage.py migrate --no-input; then
     print_success "Database migrations completed"
 else
     print_error "Database migration failed"
+    docker compose -f docker-compose.prod.yml logs heimwerk
     exit 1
 fi
 
-print_info "Collecting static files..."
+print_info "Collecting static files (this is critical!)..."
 if docker compose -f docker-compose.prod.yml exec -T heimwerk python manage.py collectstatic --no-input --clear; then
-    print_success "Static files collected"
+    print_success "Static files collected successfully"
 else
     print_error "Static file collection failed"
+    docker compose -f docker-compose.prod.yml logs heimwerk
     exit 1
 fi
 
-# 6. Create Admin User
-print_step "6/6" "Creating Admin Account"
+# 7. Create Admin User
+print_step "7/7" "Creating Admin Account"
 
+print_info "Creating superuser account..."
+
+# First, try to delete any existing admin user with the same username
+docker compose -f docker-compose.prod.yml exec -T heimwerk python manage.py shell <<EOF 2>/dev/null || true
+from django.contrib.auth import get_user_model
+User = get_user_model()
+try:
+    user = User.objects.get(username='$ADMIN_USER')
+    user.delete()
+    print('Removed existing user')
+except User.DoesNotExist:
+    pass
+EOF
+
+# Now create the new admin user
 if docker compose -f docker-compose.prod.yml exec -T \
     -e DJANGO_SUPERUSER_PASSWORD="$ADMIN_PASS" \
     -e DJANGO_SUPERUSER_USERNAME="$ADMIN_USER" \
     -e DJANGO_SUPERUSER_EMAIL="$ADMIN_EMAIL" \
-    heimwerk python manage.py createsuperuser --no-input 2>/dev/null; then
-    print_success "Admin account created"
+    heimwerk python manage.py createsuperuser --no-input; then
+    print_success "Admin account created successfully"
 else
-    print_info "Admin account may already exist (this is okay)"
+    print_error "Failed to create admin account"
+    print_info "Trying alternative method..."
+
+    # Alternative: Use Django shell to create user
+    docker compose -f docker-compose.prod.yml exec -T heimwerk python manage.py shell <<EOF
+from django.contrib.auth import get_user_model
+User = get_user_model()
+if not User.objects.filter(username='$ADMIN_USER').exists():
+    User.objects.create_superuser('$ADMIN_USER', '$ADMIN_EMAIL', '$ADMIN_PASS')
+    print('Admin user created via shell')
+else:
+    user = User.objects.get(username='$ADMIN_USER')
+    user.set_password('$ADMIN_PASS')
+    user.email = '$ADMIN_EMAIL'
+    user.is_superuser = True
+    user.is_staff = True
+    user.save()
+    print('Admin user updated')
+EOF
+    print_success "Admin account configured"
 fi
 
 # Final restart to ensure everything is running smoothly
 print_info "Restarting services for clean state..."
 docker compose -f docker-compose.prod.yml restart
+
+print_info "Waiting for services to stabilize..."
+sleep 5
 
 # Success Message
 echo ""
@@ -236,10 +287,14 @@ echo ""
 echo -e "${BOLD}${ORANGE}Access Information:${NC}"
 echo -e "  ${ARROW} URL:      ${BOLD}${CYAN}http://$USER_DOMAIN${NC}"
 echo -e "  ${ARROW} Username: ${BOLD}${CYAN}$ADMIN_USER${NC}"
-echo -e "  ${ARROW} Password: ${BOLD}${CYAN}(your password)${NC}"
+echo -e "  ${ARROW} Password: ${BOLD}${CYAN}(the password you entered)${NC}"
 echo ""
 echo -e "${ORANGE}Quick Commands:${NC}"
 echo -e "  ${ARROW} View logs:    ${CYAN}docker compose -f docker-compose.prod.yml logs -f${NC}"
 echo -e "  ${ARROW} Stop:         ${CYAN}docker compose -f docker-compose.prod.yml down${NC}"
 echo -e "  ${ARROW} Restart:      ${CYAN}docker compose -f docker-compose.prod.yml restart${NC}"
+echo ""
+echo -e "${ORANGE}Troubleshooting:${NC}"
+echo -e "  ${ARROW} If you can't login, reset password with:${NC}"
+echo -e "      ${CYAN}docker compose -f docker-compose.prod.yml exec heimwerk python manage.py changepassword $ADMIN_USER${NC}"
 echo ""
