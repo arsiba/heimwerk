@@ -4,3 +4,6 @@ pillow
 channels
 daphne
 python-dotenv
+dj_database_url
+whitenoise
+psycopg2-binary
