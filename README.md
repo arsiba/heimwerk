@@ -27,6 +27,9 @@ Run the following command:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/arsiba/heimwerk/refs/heads/main/install.sh | bash
+docker compose exec -f docker-compose.prod.yml heimwerk python manage.py collectstatic
+docker compose exec -f docker-compose.prod.yml heimwerk python manage.py createsuperuser
+docker compose -f docker-compose.prod.yml restart
 
 ```
 

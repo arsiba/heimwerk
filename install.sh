@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 # =========================================================
-# HEIMWERK INSTALLATION (ROBUST PRODUCTION VERSION)
+# HEIMWERK INSTALLATION (CORE SETUP ONLY)
 # =========================================================
 
 # Colors & Icons
@@ -52,26 +52,26 @@ fatal() {
 
 print_header
 
-# [0/7] Requirements
-print_step "0/7" "Checking Requirements"
+# [0/6] Requirements
+print_step "0/6" "Checking Requirements"
 for cmd in docker curl openssl; do
     command -v "$cmd" &>/dev/null || fatal "$cmd missing"
     print_success "$cmd found"
 done
 
-# [1/7] Configuration
-print_step "1/7" "Configuration"
+# [1/6] Configuration
+print_step "1/6" "Configuration"
 read -rp "Enter your domain or IP [localhost]: " USER_DOMAIN < /dev/tty
 USER_DOMAIN=${USER_DOMAIN:-localhost}
 
-# [2/7] Download
-print_step "2/7" "Downloading Production Files"
+# [2/6] Download
+print_step "2/6" "Downloading Production Files"
 curl -fsSL "${REPO_RAW_URL}/${COMPOSE_FILE}" -o "${COMPOSE_FILE}"
 curl -fsSL "${REPO_RAW_URL}/nginx.conf" -o nginx.conf
 print_success "Files downloaded"
 
-# [3/7] Sync Credentials & Volumes
-print_step "3/7" "Syncing Credentials & Volumes"
+# [3/6] Sync Credentials & Volumes
+print_step "3/6" "Syncing Credentials & Volumes"
 if [ ! -f "$ENV_FILE" ]; then
     if docker volume ls | grep -q "${PROJECT_NAME}_postgres_data"; then
         echo -e "${ORANGE}! Old database found but no .env file.${NC}"
@@ -97,13 +97,13 @@ else
     print_info "Using existing .env"
 fi
 
-# [4/7] Start Services
-print_step "4/7" "Starting Docker Services"
+# [4/6] Start Services
+print_step "4/6" "Starting Docker Services"
 docker compose -f "${COMPOSE_FILE}" up -d --quiet-pull
 print_success "Containers are up"
 
-# [5/7] Healthcheck
-print_step "5/7" "Waiting for Database"
+# [5/6] Healthcheck
+print_step "5/6" "Waiting for Database"
 until [ "$(docker inspect -f '{{.State.Health.Status}}' $(docker compose -f ${COMPOSE_FILE} ps -q db))" == "healthy" ]; do
     echo -n "."
     sleep 2
@@ -111,30 +111,16 @@ done
 echo ""
 print_success "Database is ready"
 
-# [6/7] Backend Initialization
-print_step "6/7" "Backend Initialization"
+# [6/6] Backend Initialization
+print_step "6/6" "Database Migrations"
 
-# FIX: We use '|| true' or wrap in a subshell to prevent the RuntimeWarning
-# from triggering 'set -e' and killing the script prematurely.
 print_info "Running migrations..."
-docker compose -f "${COMPOSE_FILE}" exec -T heimwerk python manage.py migrate --no-input || print_info "Migration finished with warnings (normal)."
+# Wrapped to ensure script finishes even if Django outputs RuntimeWarnings to stderr
+docker compose -f "${COMPOSE_FILE}" exec -T heimwerk python manage.py migrate --no-input || print_info "Migration finished with warnings."
 
-print_info "Collecting static files..."
-docker compose -f "${COMPOSE_FILE}" exec -T heimwerk python manage.py collectstatic --no-input --clear || print_info "Static collection finished with warnings."
-
-print_info "Refreshing application state..."
-docker compose -f "${COMPOSE_FILE}" restart heimwerk
-print_success "Backend is fully synced"
-
-# [7/7] Admin
-print_step "7/7" "Creating Admin User"
-# Use -it for interactivity
-docker compose -f "${COMPOSE_FILE}" exec heimwerk python manage.py createsuperuser || print_info "Superuser creation skipped."
-
-print_info "Finalizing..."
-docker compose -f "${COMPOSE_FILE}" restart nginx
-
-echo -e "\n${BOLD}${GREEN}╔══════════════════════════════════════════╗"
-echo -e "║        ✓ INSTALLATION COMPLETE ✓         ║"
-echo -e "╚══════════════════════════════════════════╝${NC}\n"
-echo -e "Access your instance at: ${CYAN}http://${USER_DOMAIN}${NC}\n"
+echo -e "\n${BOLD}${GREEN}✓ AUTOMATED STEPS COMPLETE${NC}"
+echo -e "${ORANGE}Remaining manual steps:${NC}"
+echo -e "  1. Collect static files:   ${CYAN}docker compose exec heimwerk python manage.py collectstatic${NC}"
+echo -e "  2. Create admin:           ${CYAN}docker compose exec heimwerk python manage.py createsuperuser${NC}"
+echo -e "  3. Restart app:            ${CYAN}docker compose restart heimwerk nginx${NC}"
+echo ""
