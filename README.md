@@ -85,7 +85,7 @@ If you prefer to set up the containers manually:
     ```bash
     python manage.py runserver
     ```
-    The application will be available at `http://127.0.0.1:8000`.
+    The application will be available at `http://127.0.0.1:80`.
 
 ---
 
