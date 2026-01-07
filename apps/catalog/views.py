@@ -1,6 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import render
 from django.views import generic
+from django.views.decorators.http import require_safe
 
 from core.utils.permissions_check import user_can_edit
 from .models import Module
@@ -8,6 +9,7 @@ from django.views.generic.edit import CreateView
 from django.views.generic.edit import UpdateView
 
 
+@require_safe
 def index(request):
     """View function for home page of site."""
     modules = Module.objects.all()
