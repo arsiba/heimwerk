@@ -55,17 +55,23 @@ The recommended use case is in combination with **Pangolin**, to automatically m
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
 
-3. **Install dependencies:**
+3. **Set up environment variables:**
+   ```bash
+   cp .env.example .env
+   ```
+   Edit the `.env` file and set a unique `SECRET_KEY`.
+
+4. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Apply migrations:**
+5. **Apply migrations:**
    ```bash
    python manage.py migrate
    ```
 
-5. **Create a superuser:**
+6. **Create a superuser:**
    ```bash
    python manage.py createsuperuser
    ```
