@@ -193,7 +193,7 @@ def set_pangolin_labels(instance_id, container_secured_backend):
 
     instance.pangolin_name = pangolin_name
     instance.pangolin_resource_domain = domain
-    instance.pangolin_protocol = "https"
+    instance.pangolin_protocol = "http"
     instance.pangolin_target_protocol = "https" if container_secured_backend else "http"
     instance.pangolin_port = instance.host_port
     instance.save()
