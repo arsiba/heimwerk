@@ -30,8 +30,6 @@ SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-build-key")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost, 127.0.0.1").split()
-
 
 # Application definition
 
@@ -170,6 +168,19 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_REDIRECT_URL = "/"
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-CSRF_TRUSTED_ORIGINS = os.getenv(
+
+def env_list(name, default=""):
+    raw = os.getenv(name, default)
+    if not raw:
+        return []
+
+    raw = raw.strip().strip('"').strip("'")
+
+    return [item for item in raw.split() if item]
+
+
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "127.0.0.1 localhost ::1")
+
+CSRF_TRUSTED_ORIGINS = env_list(
     "CSRF_TRUSTED_ORIGINS", "http://localhost http://127.0.0.1"
-).split()
+)

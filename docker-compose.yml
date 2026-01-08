@@ -18,12 +18,8 @@ services:
     build: .
     restart: always
     command: daphne -b 0.0.0.0 -p 8000 config.asgi:application
-    environment:
-      - DJANGO_SETTINGS_MODULE=config.settings
-      - SECRET_KEY=${SECRET_KEY}
-      - DEBUG=${DEBUG}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-      - DATABASE_URL=${DATABASE_URL}
+    env_file:
+      - .env
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
