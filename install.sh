@@ -64,6 +64,21 @@ print_step "1/6" "Configuration"
 read -rp "Enter your domain or IP [localhost]: " USER_DOMAIN < /dev/tty
 USER_DOMAIN=${USER_DOMAIN:-localhost}
 
+# SSL Abfrage nur, wenn es nicht localhost ist
+USE_SSL="n"
+if [ "$USER_DOMAIN" != "localhost" ] && [ "$USER_DOMAIN" != "127.0.0.1" ]; then
+    read -rp "Is this domain running with SSL (https)? [y/N]: " USE_SSL < /dev/tty
+fi
+
+# Protokoll festlegen
+PROTO="http"
+if [[ $USE_SSL =~ ^[Yy]$ ]]; then
+    PROTO="https"
+    print_info "Using HTTPS for CSRF origins"
+else
+    print_info "Using HTTP for CSRF origins"
+fi
+
 # [2/6] Download
 print_step "2/6" "Downloading Production Files"
 curl -fsSL "${REPO_RAW_URL}/${COMPOSE_FILE}" -o "${COMPOSE_FILE}"
@@ -80,12 +95,19 @@ if [ ! -f "$ENV_FILE" ]; then
             docker compose -f "${COMPOSE_FILE}" down -v &>/dev/null
         fi
     fi
+
     RAND_SECRET=$(openssl rand -hex 32)
     DB_PASS=$(openssl rand -hex 24)
+
+
+    TRUSTED="http://localhost http://127.0.0.1 http://::1 ${PROTO}://${USER_DOMAIN}"
+
     cat > "${ENV_FILE}" <<EOF
 SECRET_KEY=${RAND_SECRET}
 DEBUG=False
 ALLOWED_HOSTS="127.0.0.1 localhost ::1 ${USER_DOMAIN}"
+CSRF_TRUSTED_ORIGINS="${TRUSTED}"
+
 POSTGRES_DB=heimwerk
 POSTGRES_USER=heimwerk_admin
 POSTGRES_PASSWORD=${DB_PASS}
@@ -104,7 +126,8 @@ print_success "Containers are up"
 
 # [5/6] Healthcheck
 print_step "5/6" "Waiting for Database"
-until [ "$(docker inspect -f '{{.State.Health.Status}}' $(docker compose -f ${COMPOSE_FILE} ps -q db))" == "healthy" ]; do
+DB_CONTAINER=$(docker compose -f ${COMPOSE_FILE} ps -q db)
+until [ "$(docker inspect -f '{{.State.Health.Status}}' "$DB_CONTAINER")" == "healthy" ]; do
     echo -n "."
     sleep 2
 done
@@ -115,7 +138,6 @@ print_success "Database is ready"
 print_step "6/6" "Database Migrations"
 
 print_info "Running migrations..."
-# Wrapped to ensure script finishes even if Django outputs RuntimeWarnings to stderr
 docker compose -f "${COMPOSE_FILE}" exec -T heimwerk python manage.py migrate --no-input || print_info "Migration finished with warnings."
 
 echo -e "\n${BOLD}${GREEN}✓ AUTOMATED STEPS COMPLETE${NC}"

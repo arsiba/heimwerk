@@ -169,3 +169,7 @@ STORAGES = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_REDIRECT_URL = "/"
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    "CSRF_TRUSTED_ORIGINS", "http://localhost http://127.0.0.1"
+).split()
